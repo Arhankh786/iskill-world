@@ -6,7 +6,9 @@ function cleanCourse(input, existing) {
   const course = { ...(existing || {}), id: (existing && existing.id) || newId("crs"),
     title: String(input.title || "").trim(), category: String(input.category || "Programming").trim(),
     price: Number.isFinite(price) && price >= 0 ? price : 0, oldPrice: Number(input.oldPrice) || 0,
-    rating: Number(input.rating) || 4.8, students: Number(input.students) || 0,
+    // Ratings / student counts are NEVER set by the seller — they are
+    // computed from real orders and real buyer ratings only.
+    rating: null, students: 0,
     duration: String(input.duration || "10 hours"), lessons: Number(input.lessons) || 10,
     level: String(input.level || "Beginner"), instructor: String(input.instructor || "iSkill World"),
     description: String(input.description || ""),
@@ -49,7 +51,7 @@ export default async function handler(req, res) {
     }
     if (!needAuth(data, req)) return sendErr(res, "Admin is locked — verify your PIN", 401);
     if (action === "lock") { data.admin.session = null; await saveData(data); return sendJson(res, { ok: true }); }
-    if (action === "list") return sendJson(res, { ok: true, categories: data.categories, courses: data.courses, orders: data.orders, users: (data.users || []).map((u) => ({ id: u.id, name: u.name, contact: u.contact, createdAt: u.createdAt })), settings: data.settings || {} });
+    if (action === "list") return sendJson(res, { ok: true, categories: data.categories, courses: data.courses, orders: data.orders, ratings: data.ratings || [], users: (data.users || []).map((u) => ({ id: u.id, name: u.name, contact: u.contact, createdAt: u.createdAt })), settings: data.settings || {} });
     if (action === "saveSettings") {
       const s = body.settings || {};
       data.settings = { ...(data.settings || {}), telegramUrl: String(s.telegramUrl || data.settings?.telegramUrl || "https://t.me/+jUiC3D_slQI3ZjY1"), tagline: String(s.tagline || data.settings?.tagline || ""), featuredCourseId: String(s.featuredCourseId || data.settings?.featuredCourseId || "") };

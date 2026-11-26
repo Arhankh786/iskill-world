@@ -521,6 +521,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
         <button class="btn btn-orange" id="mineLoginBtn" data-sound>Login / Sign up</button>
       </div>
       <div id="mineContent" style="display:none">
+        <div id="myCoursesTools"></div>
         <div id="myOrdersOut" style="margin-top:6px"></div>
         <p class="support-line">Need help? <a href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound>Telegram Support @iSkill_Admin</a></p>
       </div>
@@ -770,6 +771,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
       <button class="btn btn-orange" id="cmEnroll" data-sound>Buy this course</button>
       <a class="btn btn-white" id="cmAsk" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" data-sound>Ask on Telegram</a>
       <div id="cmAccess"></div>
+      <div id="cmRate"></div>
     </div>
   </div>
 </div>
@@ -877,20 +879,22 @@ async function api(fn, opts, timeoutMs){
 
 function seedLocal(){
   function mk(id, title, cat, price, oldP, rating, students, dur, lessons, level, desc, inc, free){
-    return {id: id, title: title, category: cat, price: price, oldPrice: oldP, rating: rating, students: students, duration: dur, lessons: lessons, level: level, instructor: "iSkill World", description: desc, includes: inc, free: !!free, cover: "", coverKind: "gradient", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString()};
+    /* No fake numbers: rating is always null and students always 0 here —
+       real values come from real orders / real buyer ratings only. */
+    return {id: id, title: title, category: cat, price: price, oldPrice: oldP, rating: null, students: 0, duration: dur, lessons: lessons, level: level, instructor: "iSkill World", description: desc, includes: inc, free: !!free, cover: "", coverKind: "gradient", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString()};
   }
   return {categories: ["Programming", "Design", "Digital Marketing", "Business", "Data Science", "Language", "Music", "Photography"], courses: [
-    mk("python-bootcamp", "Complete Python Bootcamp — From Zero to Hero", "Programming", 499, 1999, 4.8, 2140, "32 hours", 185, "Beginner", "Learn Python from scratch — basics, OOP, file handling and real projects, in simple English.", ["185 video lessons", "12 hands-on projects", "Certificate of completion", "Lifetime access"]),
-    mk("fullstack-web-dev", "Full-Stack Web Development", "Programming", 999, 3999, 4.9, 1875, "26 hours", 132, "Intermediate", "HTML, CSS, JavaScript, Node.js and databases — build and deploy complete websites.", ["132 video lessons", "8 portfolio projects", "Certificate of completion", "Lifetime access"]),
-    mk("uiux-figma", "UI/UX Design Masterclass", "Design", 799, 2499, 4.8, 1420, "14 hours", 74, "All Levels", "Design beautiful apps and websites in Figma — wireframes, prototypes and design systems.", ["74 video lessons", "6 design projects", "Certificate of completion", "Lifetime access"]),
-    mk("digital-marketing", "Digital Marketing Pro", "Digital Marketing", 599, 1999, 4.7, 1680, "12 hours", 68, "Beginner", "SEO, Instagram ads, funnels and analytics — grow any business online.", ["68 video lessons", "Real ad account walkthroughs", "Certificate of completion", "Lifetime access"]),
-    mk("stock-trading", "Stock Market and Trading", "Business", 899, 2999, 4.8, 2210, "16 hours", 82, "Beginner", "Understand the stock market, technical analysis, risk management and trading psychology.", ["82 video lessons", "Live chart examples", "Certificate of completion", "Lifetime access"]),
-    mk("data-science-ml", "Data Science and Machine Learning", "Data Science", 1299, 4999, 4.9, 1240, "30 hours", 148, "Intermediate", "Python for data, Pandas, visualisation and your first machine learning models.", ["148 video lessons", "10 datasets + projects", "Certificate of completion", "Lifetime access"]),
-    mk("spoken-english", "Spoken English Fluency Course", "Language", 0, 999, 4.7, 5300, "8 hours", 45, "Beginner", "Speak English confidently — daily speaking practice, grammar made simple and common conversations.", ["45 video lessons", "Speaking practice sheets", "Certificate of completion", "Lifetime access"], true),
-    mk("photography", "Photography Basics", "Photography", 699, 1999, 4.8, 980, "10 hours", 56, "All Levels", "Camera settings, composition, lighting and mobile + DSLR editing — from beginner to pro.", ["56 video lessons", "Photo assignments", "Certificate of completion", "Lifetime access"])
-  ], orders: [], users: [], admin: {pinHash: null}, settings: {telegramUrl: TELEGRAM_URL, featuredCourseId: ""}};
+    mk("python-bootcamp", "Complete Python Bootcamp — From Zero to Hero", "Programming", 499, 1999, null, 0, "32 hours", 185, "Beginner", "Learn Python from scratch — basics, OOP, file handling and real projects, in simple English.", ["185 video lessons", "12 hands-on projects", "Certificate of completion", "Lifetime access"]),
+    mk("fullstack-web-dev", "Full-Stack Web Development", "Programming", 999, 3999, null, 0, "26 hours", 132, "Intermediate", "HTML, CSS, JavaScript, Node.js and databases — build and deploy complete websites.", ["132 video lessons", "8 portfolio projects", "Certificate of completion", "Lifetime access"]),
+    mk("uiux-figma", "UI/UX Design Masterclass", "Design", 799, 2499, null, 0, "14 hours", 74, "All Levels", "Design beautiful apps and websites in Figma — wireframes, prototypes and design systems.", ["74 video lessons", "6 design projects", "Certificate of completion", "Lifetime access"]),
+    mk("digital-marketing", "Digital Marketing Pro", "Digital Marketing", 599, 1999, null, 0, "12 hours", 68, "Beginner", "SEO, Instagram ads, funnels and analytics — grow any business online.", ["68 video lessons", "Real ad account walkthroughs", "Certificate of completion", "Lifetime access"]),
+    mk("stock-trading", "Stock Market and Trading", "Business", 899, 2999, null, 0, "16 hours", 82, "Beginner", "Understand the stock market, technical analysis, risk management and trading psychology.", ["82 video lessons", "Live chart examples", "Certificate of completion", "Lifetime access"]),
+    mk("data-science-ml", "Data Science and Machine Learning", "Data Science", 1299, 4999, null, 0, "30 hours", 148, "Intermediate", "Python for data, Pandas, visualisation and your first machine learning models.", ["148 video lessons", "10 datasets + projects", "Certificate of completion", "Lifetime access"]),
+    mk("spoken-english", "Spoken English Fluency Course", "Language", 0, 999, null, 0, "8 hours", 45, "Beginner", "Speak English confidently — daily speaking practice, grammar made simple and common conversations.", ["45 video lessons", "Speaking practice sheets", "Certificate of completion", "Lifetime access"], true),
+    mk("photography", "Photography Basics", "Photography", 699, 1999, null, 0, "10 hours", 56, "All Levels", "Camera settings, composition, lighting and mobile + DSLR editing — from beginner to pro.", ["56 video lessons", "Photo assignments", "Certificate of completion", "Lifetime access"])
+  ], orders: [], ratings: [], users: [], admin: {pinHash: null}, settings: {telegramUrl: TELEGRAM_URL, featuredCourseId: ""}};
 }
-function localLoad(){ try{ var s = localStorage.getItem("iskill_local_v1"); if(s) return JSON.parse(s); }catch(e){} var d = seedLocal(); try{ localStorage.setItem("iskill_local_v1", JSON.stringify(d)); }catch(e){} return d; }
+function localLoad(){ try{ var s = localStorage.getItem("iskill_local_v1"); if(s){ var d = JSON.parse(s); if(!Array.isArray(d.ratings)) d.ratings = []; return d; } }catch(e){} var d = seedLocal(); try{ localStorage.setItem("iskill_local_v1", JSON.stringify(d)); }catch(e){} return d; }
 function localSave(){ try{ localStorage.setItem("iskill_local_v1", JSON.stringify(DATA)); }catch(e){} }
 
 /* backend course shape -> card shape (driveUrl / telegramChannel stay hidden from public cards) */
@@ -909,9 +913,11 @@ function artFor(c){
 }
 function normCourse(c){
   return {id: String(c.id), title: c.title, cat: c.category, price: Number(c.price) || 0, oldPrice: Number(c.oldPrice) || 0,
-    rating: c.rating || 4.8, lessons: c.lessons || 0, duration: c.duration || "", level: c.level || "Beginner", art: artFor(c),
+    rating: null, lessons: c.lessons || 0, duration: c.duration || "", level: c.level || "Beginner", art: artFor(c),
     desc: c.description || "", drive: c.driveUrl || "",
-    cover: (c.cover && c.coverKind !== "gradient") ? c.cover : "", telegram: c.telegramChannel || ""};
+    cover: (c.cover && c.coverKind !== "gradient") ? c.cover : "", telegram: c.telegramChannel || "",
+    ratingAvg: (c.ratingAvg == null ? null : Number(c.ratingAvg)), ratingCount: Number(c.ratingCount) || 0,
+    students: Number(c.students) || 0};
 }
 function normOrder(o){
   var st = String(o.status || "pending").toLowerCase();
@@ -928,6 +934,25 @@ function applyServerData(courses, catNames){
   RAW = courses || [];
   state.categories = (catNames && catNames.length ? catNames.slice() : ["Programming", "Design", "Digital Marketing", "Business", "Data Science", "Language", "Music", "Photography"]);
   state.courses = RAW.map(normCourse);
+}
+/* REAL stats only: students = approved buyers, rating = average of real
+   buyer ratings. Live mode uses the server-computed numbers; demo mode
+   computes the same numbers from local orders/ratings. No fake values. */
+function statsFor(c){
+  if(MODE === "live") return {students: Number(c.students) || 0, ratingAvg: (c.ratingAvg == null ? null : Number(c.ratingAvg)), ratingCount: Number(c.ratingCount) || 0};
+  var st = 0; (DATA.orders || []).forEach(function(o){ if(String(o.courseId) === String(c.id) && String(o.status || "").toLowerCase() === "approved") st++; });
+  var rs = (DATA.ratings || []).filter(function(r){ return String(r.courseId) === String(c.id); });
+  var avg = rs.length ? rs.reduce(function(a, r){ return a + Number(r.stars || 0); }, 0) / rs.length : null;
+  return {students: st, ratingAvg: avg, ratingCount: rs.length};
+}
+function ratingText(c){
+  var s = statsFor(c);
+  return s.ratingCount ? ("★ " + (Math.round(s.ratingAvg * 10) / 10) + " (" + s.ratingCount + (s.ratingCount === 1 ? " rating" : " ratings") + ")") : "No ratings yet";
+}
+function ratingBarHTML(c){
+  var s = statsFor(c);
+  if(!s.ratingCount) return "<div class=\"cc-rate\"><span>Rating</span><span class=\"cc-val\">No ratings yet</span></div>";
+  return "<div class=\"cc-rate\"><span>Rating</span><div class=\"cc-track\"><div class=\"cc-fill\" style=\"width:" + Math.round((s.ratingAvg / 5) * 100) + "%\"></div></div><span class=\"cc-val\">" + (Math.round(s.ratingAvg * 10) / 10) + " \u2605 (" + s.ratingCount + ")</span></div>";
 }
 
 /* ---- hero showcase: admin-picked course, or "Automatic" = first course ---- */
@@ -985,6 +1010,7 @@ async function refreshAdminData(){
       showPinGate(); toast("Session expired — enter your PIN again.", true); return false;
     }
     DATA.categories = r.categories; DATA.courses = r.courses; DATA.orders = r.orders || [];
+    DATA.ratings = r.ratings || [];
     DATA.settings = r.settings || DATA.settings || {telegramUrl: TELEGRAM_URL};
     if(DATA.settings.telegramUrl){ TELEGRAM_URL = DATA.settings.telegramUrl; applyTelegramLinks(); }
     var tg = $("tgUrl"); if(tg && DATA.settings.telegramUrl) tg.value = DATA.settings.telegramUrl;
@@ -1185,7 +1211,7 @@ function metaHTML(c){
   if(c.lessons) pills.push((c.lessons || 0) + " lessons");
   if(c.duration) pills.push(c.duration);
   if(c.level) pills.push(c.level);
-  pills.push("★ " + (c.rating || 4.8));
+  pills.push(ratingText(c));
   return pills.map(function(p){ return "<span class=\"meta-pill\">" + esc(p) + "</span>"; }).join("");
 }
 function priceHTML(c){
@@ -1202,7 +1228,7 @@ function renderCourses(){
   });
   if(sort === "low") list.sort(function(a, b){ return a.price - b.price; });
   if(sort === "high") list.sort(function(a, b){ return b.price - a.price; });
-  if(sort === "rating" || sort === "pop") list.sort(function(a, b){ return (b.rating || 0) - (a.rating || 0); });
+  if(sort === "rating" || sort === "pop") list.sort(function(a, b){ var sa = statsFor(a), sb = statsFor(b); return (sb.ratingAvg || 0) - (sa.ratingAvg || 0); });
   var g = $("courseGrid"); g.innerHTML = "";
   if(!list.length){
     g.innerHTML = "<div class=\"empty-box\"><h3>No courses found</h3><p>Try a different search or category.</p></div>";
@@ -1218,8 +1244,8 @@ function renderCourses(){
       + (!c.price ? "<span class=\"free-badge\">FREE</span>" : (offPct(c) ? "<span class=\"off-badge\">" + offPct(c) + "% OFF</span>" : ""))
       + "</div><div class=\"course-body\"><span class=\"course-eyebrow\">" + bookSVG() + " " + esc(c.cat) + " \u00b7 " + esc(c.level || "") + "</span><h3>" + esc(c.title) + "</h3>"
       + "<p class=\"course-desc\">" + esc(c.desc) + "</p>"
-      + "<div class=\"cc-rate\"><span>Rating</span><div class=\"cc-track\"><div class=\"cc-fill\" style=\"width:" + Math.round(((c.rating || 4.8) / 5) * 100) + "%\"></div></div><span class=\"cc-val\">" + (c.rating || 4.8) + " \u2605</span></div>"
-      + "<div class=\"cc-meta\"><span class=\"cc-students\">" + usersSVG() + " " + Number(c.students || 0).toLocaleString("en-IN") + " students</span>" + (c.lessons ? "<span class=\"cc-pill\">" + (c.lessons || 0) + " lessons</span>" : "") + (c.duration ? "<span class=\"cc-pill\">" + esc(c.duration) + "</span>" : "") + "</div>"
+      + ratingBarHTML(c)
+      + "<div class=\"cc-meta\"><span class=\"cc-students\">" + usersSVG() + " " + Number(statsFor(c).students).toLocaleString("en-IN") + " students</span>" + (c.lessons ? "<span class=\"cc-pill\">" + (c.lessons || 0) + " lessons</span>" : "") + (c.duration ? "<span class=\"cc-pill\">" + esc(c.duration) + "</span>" : "") + "</div>"
       + "<div class=\"course-foot\">" + priceHTML(c)
       + "<span class=\"details-link\">" + (owned ? "Open course" : "Details") + " \u25b8</span></div></div>";
     card.addEventListener("click", function(){ openDetail(c.id); });
@@ -1286,7 +1312,76 @@ function openDetail(id){
       + ((!drv && !tg) ? "<p class=\"hint\" style=\"font-weight:700;color:var(--green)\">Your access is approved. The seller will share the course material on your contact shortly.</p>" : "");
     $("cmEnroll").textContent = "Purchased — Open My Course";
   } else { acc.innerHTML = ""; $("cmEnroll").textContent = c.price ? "Buy this course" : "Get this course, Free"; }
+  renderDetailRating(c);
   openModal("courseModal");
+}
+/* Ratings in the detail modal — only owners can rate (1–5 stars + an
+   optional short review). One rating per buyer; rating again updates it. */
+var detailRatingStars = 0;
+async function renderDetailRating(c){
+  var box = $("cmRate"); if(!box) return;
+  var s = statsFor(c);
+  var owned = isOwned(c.id);
+  var h = "<div style=\"margin-top:16px;border-top:1px solid var(--border);padding-top:14px\">";
+  h += "<h4 style=\"margin:0 0 6px\">Ratings</h4>";
+  if(s.ratingCount) h += "<p style=\"margin:0 0 8px\"><b>\u2605 " + (Math.round(s.ratingAvg * 10) / 10) + "</b> \u00b7 " + s.ratingCount + (s.ratingCount === 1 ? " rating" : " ratings") + " \u00b7 " + s.students + " students</p>";
+  else h += "<p class=\"hint\" style=\"margin:0 0 8px\">No ratings yet — be the first to rate this course.</p>";
+  var mine = null, recent = [];
+  if(MODE === "live"){
+    var r = await api("rate?courseId=" + encodeURIComponent(c.id), {token: USER_TOKEN});
+    if(r && r.ok){ mine = r.myRating || null; recent = r.ratings || []; }
+  } else {
+    var rs = (DATA.ratings || []).filter(function(x){ return String(x.courseId) === String(c.id); });
+    if(USER) mine = rs.filter(function(x){ return String(x.userId) === String(USER.id); })[0] || null;
+    recent = rs.slice(-3).reverse().map(function(x){ return {userName: x.userName || "Buyer", stars: x.stars, text: x.text || ""}; });
+  }
+  if(recent.length){
+    h += recent.map(function(x){
+      return "<div style=\"border-top:1px dashed var(--border);padding:8px 0\"><b>" + esc(x.userName || "Buyer") + "</b> " + "\u2605".repeat(Number(x.stars) || 0) + (x.text ? "<br><span>" + esc(x.text) + "</span>" : "") + "</div>";
+    }).join("");
+  }
+  if(owned){
+    var picked = detailRatingStars || (mine ? mine.stars : 0);
+    h += "<p style=\"margin:10px 0 4px;font-weight:700\">" + (mine ? "Your rating — tap to change it" : "Rate this course") + "</p>";
+    h += "<div style=\"display:flex;gap:4px\">" + [1, 2, 3, 4, 5].map(function(n){
+      return "<button type=\"button\" class=\"rate-star\" data-star=\"" + n + "\" data-sound style=\"font-size:28px;line-height:1;background:none;border:none;cursor:pointer;color:" + (n <= picked ? "#ff9500" : "#cbd5e1") + "\" aria-label=\"" + n + " stars\">\u2605</button>";
+    }).join("") + "</div>";
+    h += "<div class=\"field\" style=\"margin-top:8px\"><textarea id=\"rateText\" rows=\"2\" maxlength=\"500\" placeholder=\"Write a short review (optional)\">" + esc(mine ? mine.text || "" : "") + "</textarea></div>";
+    h += "<button class=\"btn btn-orange btn-sm\" id=\"rateSubmit\" data-sound>Submit rating</button>";
+  } else if(USER){
+    h += "<p class=\"hint\">Buy this course to rate it — only owners can rate.</p>";
+  } else {
+    h += "<p class=\"hint\">Login and buy this course to rate it.</p>";
+  }
+  box.innerHTML = h + "</div>";
+  box.querySelectorAll("[data-star]").forEach(function(b){
+    b.addEventListener("click", function(){
+      detailRatingStars = Number(b.getAttribute("data-star"));
+      box.querySelectorAll("[data-star]").forEach(function(b2){
+        b2.style.color = Number(b2.getAttribute("data-star")) <= detailRatingStars ? "#ff9500" : "#cbd5e1";
+      });
+    });
+  });
+  var sub = $("rateSubmit");
+  if(sub) sub.addEventListener("click", submitDetailRating);
+}
+async function submitDetailRating(){
+  var c = state.courses.filter(function(x){ return String(x.id) === String(detailCourseId); })[0]; if(!c) return;
+  if(!detailRatingStars){ toast("Please choose 1 to 5 stars first.", true); return; }
+  var text = ($("rateText") && $("rateText").value || "").trim();
+  if(MODE === "live"){
+    var r = await api("rate", {token: USER_TOKEN, method: "POST", body: JSON.stringify({courseId: c.id, stars: detailRatingStars, text: text})});
+    if(!r || !r.ok){ toast("Rating failed: " + ((r && r.error) || "try again."), true); return; }
+    c.ratingAvg = r.ratingAvg; c.ratingCount = r.ratingCount; c.students = r.students;
+  } else {
+    var ex = (DATA.ratings || []).filter(function(x){ return String(x.courseId) === String(c.id) && String(x.userId) === String(USER.id); })[0];
+    if(ex){ ex.stars = detailRatingStars; ex.text = text; ex.updatedAt = new Date().toISOString(); }
+    else DATA.ratings.push({id: "rat-" + Date.now(), courseId: c.id, userId: USER.id, userName: USER.name || "Buyer", stars: detailRatingStars, text: text, createdAt: new Date().toISOString()});
+    localSave();
+  }
+  detailRatingStars = 0;
+  toast("Thanks for rating!");
+  renderCourses(); renderDetailRating(c);
 }
 $("cmEnroll").addEventListener("click", function(){
   if(isOwned(detailCourseId)){ closeModal("courseModal"); showView("mine"); return; }
@@ -1413,7 +1508,7 @@ async function loadMyCourses(){
     if(isOwnedCard){
       h += "<div class=\"mine-cover\">" + (cc ? coverHTML(cc) : "") + "<span class=\"owned-badge\">OWNED</span></div>";
     }
-    h += "<div class=\"mine-body\"><div class=\"mine-head\"><b>" + esc(o.courseTitle || "") + "</b> <span class=\"pill " + cls + "\">" + (isOwnedCard ? "OWNED" : label.toUpperCase()) + "</span></div>";
+    h += "<div class=\"mine-body\"><div class=\"mine-head\"><b>" + esc(o.courseTitle || "") + "</b> <span style=\"display:flex;gap:6px;align-items:center;flex-shrink:0\"><span class=\"pill " + cls + "\">" + (isOwnedCard ? "OWNED" : label.toUpperCase()) + "</span>" + (st === "pending" ? " <span class=\"on-tag\">On</span>" : "") + "</span></div>";
     h += "<span class=\"hint\">" + esc(o.code || "") + " \u00b7 " + (amt ? inr(amt) : "Free") + (o.createdAt ? " \u00b7 " + esc(new Date(o.createdAt).toLocaleDateString("en-IN")) : "") + "</span>";
     if(st === "approved"){
       var drv = o.driveUrl || o.drive || "", tg = o.telegramChannel || o.telegram || "";
@@ -1423,10 +1518,33 @@ async function loadMyCourses(){
     } else if(st === "pending") h += "<span class=\"hint\">Waiting for seller approval after payment confirmation.</span>";
     else if(st === "cancelled") h += "<span class=\"hint\">This order was cancelled. Contact the seller on Telegram if this is a mistake.</span>";
     else h += "<span class=\"hint\">This order was rejected. Contact the seller on Telegram if this is a mistake.</span>";
+    /* Same history clear as My Orders: clears the history entry only —
+       an owned course stays right here in My Courses. */
+    h += "<div style=\"margin-top:10px\"><button class=\"btn btn-sm\" data-mine-clear=\"" + esc(o.id) + "\" data-sound>Clear from history</button></div>";
     return h + "</div></div>";
   }
-  out.innerHTML = "<div class=\"mine-grid\">" + ownedList.map(function(o){ return orderCard(o, true); }).join("") + "</div>"
-    + (restList.length ? "<div class=\"mine-rest\">" + restList.map(function(o){ return orderCard(o, false); }).join("") + "</div>" : "");
+  /* History tools + sections: not-yet-approved ("On") orders on TOP,
+     approved courses in their own separate section below. */
+  var toolsEl = $("myCoursesTools");
+  if(toolsEl){
+    toolsEl.innerHTML = "";
+    var clrAll = document.createElement("button"); clrAll.className = "btn btn-sm btn-danger"; clrAll.textContent = "Clear all history"; clrAll.setAttribute("data-sound", "");
+    clrAll.addEventListener("click", function(){ armConfirm("mineAll", clrAll, "Clear all history", function(){ hideAllMyOrders(); }); });
+    toolsEl.appendChild(clrAll);
+    var mHint = document.createElement("span"); mHint.className = "hint"; mHint.textContent = "Clearing only removes the order from your history — owned courses stay here.";
+    toolsEl.appendChild(mHint);
+    toolsEl.classList.add("hist-tools");
+  }
+  var pendList = restList.filter(function(o){ return String(o.status || "").toLowerCase() === "pending"; });
+  var doneList = restList.filter(function(o){ var s2 = String(o.status || "").toLowerCase(); return s2 === "cancelled" || s2 === "rejected"; });
+  var hOut = "";
+  if(pendList.length) hOut += "<h3 class=\"ord-sec\">Waiting for approval</h3><div class=\"mine-grid\">" + pendList.map(function(o){ return orderCard(o, false); }).join("") + "</div>";
+  if(ownedList.length) hOut += "<h3 class=\"ord-sec\">Approved courses</h3><div class=\"mine-grid\">" + ownedList.map(function(o){ return orderCard(o, true); }).join("") + "</div>";
+  if(doneList.length) hOut += "<h3 class=\"ord-sec\">Cancelled / Rejected</h3><div class=\"mine-rest\">" + doneList.map(function(o){ return orderCard(o, false); }).join("") + "</div>";
+  out.innerHTML = hOut;
+  out.querySelectorAll("[data-mine-clear]").forEach(function(b){
+    b.addEventListener("click", function(){ armConfirm("mine" + b.getAttribute("data-mine-clear"), b, "Clear from history", function(){ hideMyOrder(b.getAttribute("data-mine-clear")); }); });
+  });
 }
 function myOrders(){ return loadMyCourses(); }
 /* Two-tap confirm for destructive history buttons (same pattern as
@@ -1448,7 +1566,7 @@ async function hideMyOrder(id){
     if(o){ o.hiddenByBuyer = true; localSave(); }
   }
   (myOrdersCache || []).forEach(function(x){ if(String(x.id) === String(id)) x.hiddenByBuyer = true; });
-  loadMyOrders(state.myOrderFilter || "all");
+  loadMyCourses(); loadMyOrders(state.myOrderFilter || "all");
   toast("Removed from your history. Your course access is unchanged.");
 }
 async function hideAllMyOrders(){
@@ -1461,7 +1579,7 @@ async function hideAllMyOrders(){
   }
   (myOrdersCache || []).forEach(function(x){ x.hiddenByBuyer = true; });
   state.showClearedOrders = false;
-  loadMyOrders(state.myOrderFilter || "all");
+  loadMyCourses(); loadMyOrders(state.myOrderFilter || "all");
   toast("History cleared. Your courses are still yours in My Courses.");
 }
 async function unhideMyOrder(id){
@@ -1473,7 +1591,7 @@ async function unhideMyOrder(id){
     if(o){ o.hiddenByBuyer = false; localSave(); }
   }
   (myOrdersCache || []).forEach(function(x){ if(String(x.id) === String(id)) x.hiddenByBuyer = false; });
-  loadMyOrders(state.myOrderFilter || "all");
+  loadMyCourses(); loadMyOrders(state.myOrderFilter || "all");
   toast("Order restored to your history.");
 }
 async function loadMyOrders(filter){
@@ -2005,7 +2123,7 @@ $("addForm").addEventListener("submit", async function(e){
   var oldRaw = state.editingId ? RAW.filter(function(x){ return String(x.id) === String(state.editingId); })[0] : null;
   var data = {
     title: title, category: cat, price: price, oldPrice: oldPrice,
-    rating: oldRaw ? oldRaw.rating : 4.6, students: oldRaw ? oldRaw.students : 0,
+    rating: null, students: 0,
     duration: oldRaw ? oldRaw.duration : "10 hours", lessons: lessons, level: $("fLevel").value,
     description: desc,
     includes: oldRaw ? oldRaw.includes : ["Complete video course — lifetime access", "Delivered on Google Drive", "Downloadable resources", "Certificate of completion", "Support on Telegram", "Free updates"],
@@ -2061,7 +2179,7 @@ $("drvForm").addEventListener("submit", async function(e){
     var cover = $("dImgUrl").value.trim() || (id ? "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000" : "");
     var c = {id: "crs-" + Date.now(), title: title, category: $("dCat").value,
       price: $("dPrice").value === "" ? 0 : Number($("dPrice").value), oldPrice: 0,
-      rating: 4.6, students: 0, duration: "Full course", lessons: 50, level: "All Levels",
+      rating: null, students: 0, duration: "Full course", lessons: 50, level: "All Levels",
       description: "Imported from Google Drive. Edit this course in “My Courses” to add a full description, lessons and pricing details.",
       includes: ["Complete video course — lifetime access", "Delivered on Google Drive", "Downloadable resources", "Support on Telegram", "Free updates", "Certificate of completion"],
       driveUrl: link, telegramChannel: "", cover: cover, coverKind: cover ? "image" : "gradient", free: false, createdAt: new Date().toISOString()};
@@ -2088,7 +2206,11 @@ function renderMine(){
   list.forEach(function(c){
     var isHero = String(c.id) === String(heroId);
     var tr = document.createElement("tr");
-    tr.innerHTML = "<td><b>" + esc(c.title) + "</b>" + (isHero ? " <span class=\"hero-badge\" style=\"background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;vertical-align:middle\">★ HERO</span>" : "") + "</td><td>" + esc(c.cat) + "</td><td>" + (c.price ? inr(c.price) : "<b style=\"color:var(--green)\">FREE</b>") + "</td>"
+    /* Real numbers only: students = approved buyers, rating = average of
+       real buyer ratings (or "No ratings yet" — never a fake number). */
+    var cst = statsFor(c);
+    var statLine = "<br><span style=\"color:var(--muted);font-size:.82rem\">" + cst.students + " students \u00b7 " + (cst.ratingCount ? ("\u2605 " + (Math.round(cst.ratingAvg * 10) / 10) + " (" + cst.ratingCount + ")") : "No ratings yet") + "</span>";
+    tr.innerHTML = "<td><b>" + esc(c.title) + "</b>" + statLine + (isHero ? " <span class=\"hero-badge\" style=\"background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;vertical-align:middle\">★ HERO</span>" : "") + "</td><td>" + esc(c.cat) + "</td><td>" + (c.price ? inr(c.price) : "<b style=\"color:var(--green)\">FREE</b>") + "</td>"
       + "<td>" + (c.drive ? "<a href=\"" + esc(c.drive) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Open ↗</a>" : "<span style=\"color:var(--red);font-weight:800\">Missing</span>") + "</td>"
       + "<td><div class=\"row-actions\"><button class=\"btn btn-sm\" data-act=\"hero\" data-sound" + (isHero ? " disabled style=\"opacity:.55;cursor:default\"" : "") + ">" + (isHero ? "Hero me hai" : "Make Hero") + "</button><button class=\"btn btn-sm\" data-act=\"enh\" data-sound" + (c.cover ? "" : " disabled style=\"opacity:.55;cursor:default\"") + ">✨ Enhance</button><button class=\"btn btn-sm\" data-act=\"edit\" data-sound>Edit</button><button class=\"btn btn-sm btn-danger\" data-act=\"del\" data-sound>Remove</button></div></td>";
     tr.querySelector("[data-act=\"edit\"]").addEventListener("click", function(){ editCourse(c.id); });

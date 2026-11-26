@@ -34,16 +34,17 @@ export function seedData() {
     version: 1,
     categories: [...CATEGORIES],
     courses: [
-      c("python-bootcamp", "Complete Python Bootcamp — From Zero to Hero", "Programming", 499, 1999, 4.8, 2140, "32 hours", 185, "Beginner", "iSkill World", "Learn Python from scratch — basics, OOP, file handling and real projects, in simple English.", ["185 video lessons", "12 hands-on projects", "Certificate of completion", "Lifetime access"]),
-      c("fullstack-web-dev", "Full-Stack Web Development", "Programming", 999, 3999, 4.9, 1875, "26 hours", 132, "Intermediate", "iSkill World", "HTML, CSS, JavaScript, Node.js and databases — build and deploy complete websites.", ["132 video lessons", "8 portfolio projects", "Certificate of completion", "Lifetime access"]),
-      c("uiux-figma", "UI/UX Design Masterclass", "Design", 799, 2499, 4.8, 1420, "14 hours", 74, "All Levels", "iSkill World", "Design beautiful apps and websites in Figma — wireframes, prototypes and design systems.", ["74 video lessons", "6 design projects", "Certificate of completion", "Lifetime access"]),
-      c("digital-marketing", "Digital Marketing Pro", "Digital Marketing", 599, 1999, 4.7, 1680, "12 hours", 68, "Beginner", "iSkill World", "SEO, Instagram ads, funnels and analytics — grow any business online.", ["68 video lessons", "Real ad account walkthroughs", "Certificate of completion", "Lifetime access"]),
-      c("stock-trading", "Stock Market and Trading", "Business", 899, 2999, 4.8, 2210, "16 hours", 82, "Beginner", "iSkill World", "Understand the stock market, technical analysis, risk management and trading psychology.", ["82 video lessons", "Live chart examples", "Certificate of completion", "Lifetime access"]),
-      c("data-science-ml", "Data Science and Machine Learning", "Data Science", 1299, 4999, 4.9, 1240, "30 hours", 148, "Intermediate", "iSkill World", "Python for data, Pandas, visualisation and your first machine learning models.", ["148 video lessons", "10 datasets + projects", "Certificate of completion", "Lifetime access"]),
-      c("spoken-english", "Spoken English Fluency Course", "Language", 0, 999, 4.7, 5300, "8 hours", 45, "Beginner", "iSkill World", "Speak English confidently — daily speaking practice, grammar made simple and common conversations.", ["45 video lessons", "Speaking practice sheets", "Certificate of completion", "Lifetime access"], true),
-      c("photography", "Photography Basics", "Photography", 699, 1999, 4.8, 980, "10 hours", 56, "All Levels", "iSkill World", "Camera settings, composition, lighting and mobile + DSLR editing — from beginner to pro.", ["56 video lessons", "Photo assignments", "Certificate of completion", "Lifetime access"]),
+      c("python-bootcamp", "Complete Python Bootcamp — From Zero to Hero", "Programming", 499, 1999, null, 0, "32 hours", 185, "Beginner", "iSkill World", "Learn Python from scratch — basics, OOP, file handling and real projects, in simple English.", ["185 video lessons", "12 hands-on projects", "Certificate of completion", "Lifetime access"]),
+      c("fullstack-web-dev", "Full-Stack Web Development", "Programming", 999, 3999, null, 0, "26 hours", 132, "Intermediate", "iSkill World", "HTML, CSS, JavaScript, Node.js and databases — build and deploy complete websites.", ["132 video lessons", "8 portfolio projects", "Certificate of completion", "Lifetime access"]),
+      c("uiux-figma", "UI/UX Design Masterclass", "Design", 799, 2499, null, 0, "14 hours", 74, "All Levels", "iSkill World", "Design beautiful apps and websites in Figma — wireframes, prototypes and design systems.", ["74 video lessons", "6 design projects", "Certificate of completion", "Lifetime access"]),
+      c("digital-marketing", "Digital Marketing Pro", "Digital Marketing", 599, 1999, null, 0, "12 hours", 68, "Beginner", "iSkill World", "SEO, Instagram ads, funnels and analytics — grow any business online.", ["68 video lessons", "Real ad account walkthroughs", "Certificate of completion", "Lifetime access"]),
+      c("stock-trading", "Stock Market and Trading", "Business", 899, 2999, null, 0, "16 hours", 82, "Beginner", "iSkill World", "Understand the stock market, technical analysis, risk management and trading psychology.", ["82 video lessons", "Live chart examples", "Certificate of completion", "Lifetime access"]),
+      c("data-science-ml", "Data Science and Machine Learning", "Data Science", 1299, 4999, null, 0, "30 hours", 148, "Intermediate", "iSkill World", "Python for data, Pandas, visualisation and your first machine learning models.", ["148 video lessons", "10 datasets + projects", "Certificate of completion", "Lifetime access"]),
+      c("spoken-english", "Spoken English Fluency Course", "Language", 0, 999, null, 0, "8 hours", 45, "Beginner", "iSkill World", "Speak English confidently — daily speaking practice, grammar made simple and common conversations.", ["45 video lessons", "Speaking practice sheets", "Certificate of completion", "Lifetime access"], true),
+      c("photography", "Photography Basics", "Photography", 699, 1999, null, 0, "10 hours", 56, "All Levels", "iSkill World", "Camera settings, composition, lighting and mobile + DSLR editing — from beginner to pro.", ["56 video lessons", "Photo assignments", "Certificate of completion", "Lifetime access"]),
     ],
     orders: [],
+    ratings: [],
     users: [],
     admin: { pin: null, session: null },
     settings: { telegramUrl: "https://t.me/+jUiC3D_slQI3ZjY1", tagline: "Skills that make you dangerously good.", featuredCourseId: "" },
@@ -55,11 +56,25 @@ export function ensureData(data) {
   if (!data) return data;
   if (!Array.isArray(data.users)) data.users = [];
   if (!Array.isArray(data.orders)) data.orders = [];
+  if (!Array.isArray(data.ratings)) data.ratings = [];
   if (!Array.isArray(data.courses)) data.courses = [];
+  // Fake seeded ratings / student counts are never shown any more: wipe
+  // them from stored courses so only real numbers can ever appear.
+  data.courses.forEach((c) => { c.rating = null; c.students = 0; });
   if (!Array.isArray(data.categories)) data.categories = [...CATEGORIES];
   if (!data.admin) data.admin = { pin: null, session: null };
   if (!data.settings) data.settings = { telegramUrl: "https://t.me/+jUiC3D_slQI3ZjY1", featuredCourseId: "" };
   return data;
+}
+
+// REAL stats, computed from real data — never stored/faked:
+// students = buyers whose order for this course is approved;
+// rating = average of real buyer ratings only (null when nobody rated).
+export function courseStats(data, courseId) {
+  const students = (data.orders || []).filter((o) => String(o.courseId) === String(courseId) && String(o.status || "").toLowerCase() === "approved").length;
+  const rs = (data.ratings || []).filter((r) => String(r.courseId) === String(courseId));
+  const ratingAvg = rs.length ? rs.reduce((a, r) => a + Number(r.stars || 0), 0) / rs.length : null;
+  return { students, ratingAvg, ratingCount: rs.length };
 }
 
 export async function loadData(opts) {
@@ -265,6 +280,18 @@ export function readBody(req) {
   if (typeof req.body === "string") { try { return JSON.parse(req.body); } catch { return {}; } }
   return req.body;
 }
-export function publicCourse(c) { const { driveUrl, telegramChannel, ...rest } = c; return rest; }
+export function publicCourse(c, data) {
+  const { driveUrl, telegramChannel, ...rest } = c;
+  // Always show REAL numbers: students + rating come from real orders and
+  // real buyer ratings, never from any stored rating/students field.
+  if (data) {
+    const s = courseStats(data, c.id);
+    rest.students = s.students; rest.ratingAvg = s.ratingAvg; rest.ratingCount = s.ratingCount;
+  } else {
+    rest.students = 0; rest.ratingAvg = null; rest.ratingCount = 0;
+  }
+  delete rest.rating;
+  return rest;
+}
 export function publicSettings(data) { return (data && data.settings) || { telegramUrl: "https://t.me/+jUiC3D_slQI3ZjY1" }; }
 export function newId(prefix) { return `${prefix}-${Date.now().toString(36)}-${crypto.randomBytes(3).toString("hex")}`; }

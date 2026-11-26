@@ -76,6 +76,7 @@ export default async function handler(req, res) {
         return sendErr(res, "Wrong password — your account was not deleted.", 401);
       data.users = data.users.filter((u) => String(u.id) !== String(user.id));
       data.orders = (data.orders || []).filter((o) => String(o.userId) !== String(user.id));
+      data.ratings = (data.ratings || []).filter((r) => String(r.userId) !== String(user.id));
       const saved = await saveData(data);
       if (!saved) return sendErr(res, "Could not delete your account right now — please try again.", 500);
       return sendJson(res, { ok: true, message: "Account deleted." });
