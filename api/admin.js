@@ -81,6 +81,15 @@ export default async function handler(req, res) {
       await saveData(data);
       return sendJson(res, { ok: true, removedOrders });
     }
+    if (action === "clearAllCourses") {
+      // Fresh start: removes ALL courses from the catalog ONLY.
+      // Orders, users, ratings, the admin PIN and settings are untouched.
+      // Use "Restore sample courses" afterwards to bring the 8 samples back.
+      const cleared = data.courses.length;
+      data.courses = [];
+      await saveData(data);
+      return sendJson(res, { ok: true, cleared });
+    }
     if (action === "driveImport") {
       const driveUrl = String(body.driveUrl || "");
       const id = parseDriveId(driveUrl);

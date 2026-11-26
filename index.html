@@ -736,7 +736,11 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
           <h3 style="font-size:18px">Restore sample courses</h3>
           <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">If the catalog is ever empty, this brings back the 8 sample courses and categories. Orders, buyers, your admin PIN and settings are not touched.</p>
           <div class="form-ok" id="seedOk"></div>
-          <button class="btn btn-orange" id="restoreSeedBtn" type="button" data-sound>Restore sample courses</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-orange" id="restoreSeedBtn" type="button" data-sound>Restore sample courses</button>
+            <button class="btn btn-danger" id="clearAllCoursesBtn" type="button" data-sound>Clear all courses</button>
+          </div>
+          <p class="hint" style="margin:10px 0 0">Clear all courses removes every course from the catalog so you can start fresh. Orders, buyers, your PIN and settings stay safe — and you can bring the 8 sample courses back with Restore any time.</p>
         </div>
         <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;margin-bottom:16px">
           <h3 style="font-size:18px">Enhance all thumbnails</h3>
@@ -2504,6 +2508,29 @@ var _rs = $("restoreSeedBtn"); if(_rs) _rs.addEventListener("click", async funct
       toast(DATA.courses.length + " sample courses restored.");
     }
   } finally { _rs.disabled = false; _rs.textContent = "Restore sample courses"; }
+});
+
+/* clear all courses — double confirm, then removes every course from the
+   catalog ONLY. Orders, buyers, ratings, PIN and settings are untouched;
+   "Restore sample courses" brings the 8 samples back afterwards. */
+var _cc = $("clearAllCoursesBtn"); if(_cc) _cc.addEventListener("click", async function(){
+  if(!confirm("Clear all courses? Every course will be removed from the catalog.")) return;
+  if(!confirm("Final check — remove ALL courses? Orders, buyers and your PIN stay safe, and you can restore the 8 sample courses afterwards.")) return;
+  _cc.disabled = true; _cc.textContent = "Clearing…";
+  try{
+    if(MODE === "live"){
+      var r = await api("admin", {method: "POST", body: JSON.stringify({action: "clearAllCourses"})});
+      if(!r || !r.ok){ toast("Clear failed: " + ((r && r.error) || "try again."), true); return; }
+      await loadCatalog(); await refreshAdminData();
+      var ok = $("seedOk"); if(ok){ ok.textContent = "Catalog cleared (" + (r.cleared || 0) + " courses removed). Use Restore sample courses to bring them back."; ok.style.display = "block"; }
+      toast("All courses cleared. Restore brings the samples back any time.");
+    } else {
+      var n = DATA.courses.length; DATA.courses = []; localSave();
+      applyServerData(DATA.courses, DATA.categories); renderAll(); setHeroCover();
+      var ok2 = $("seedOk"); if(ok2){ ok2.textContent = "Catalog cleared (" + n + " courses removed). Use Restore sample courses to bring them back."; ok2.style.display = "block"; }
+      toast("All courses cleared.");
+    }
+  } finally { _cc.disabled = false; _cc.textContent = "Clear all courses"; }
 });
 
 /* enhance thumbnails — the same auto-enhancer, over existing courses.
