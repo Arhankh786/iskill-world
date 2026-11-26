@@ -50,10 +50,14 @@ export default async function handler(req, res) {
       const password = String(body.password || "");
       let data2 = data;
       let user = data2.users.find((u) => normalizeContact(u.contact) === contact);
-      // Right after a signup on another phone/instance, Blob may still be
-      // propagating the new user — re-read it fresh once before failing,
-      // so a correct login is not rejected as "Wrong login details".
-      if (!user || !checkPassword(password, user.pass)) {
+      // Right after a signup on another phone/instance, Blob reads can
+      // lag the write by a few seconds and return the OLD data.json, so a
+      // correct login was rejected as "Wrong login details". Re-read Blob
+      // fresh with growing gaps (up to ~5s total) before failing.
+      let tries = 0;
+      while ((!user || !checkPassword(password, user.pass)) && tries < 3) {
+        tries++;
+        await new Promise((res) => setTimeout(res, 1200 * tries));
         data2 = ensureData(await reloadFresh());
         user = data2.users.find((u) => normalizeContact(u.contact) === contact);
       }

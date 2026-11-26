@@ -77,7 +77,7 @@ export async function loadData(opts) {
         }
         lastErr = new Error("data.json not listed yet");
       } catch (e) { lastErr = e; }
-      if (attempt < 2) await new Promise((res) => setTimeout(res, 350));
+      if (attempt < 2) await new Promise((res) => setTimeout(res, attempt === 0 ? 500 : 1200));
     }
     // Blob read failed (transient): serve in-memory only if we have it.
     if (memoryData && Array.isArray(memoryData.courses)) return ensureData(memoryData);
