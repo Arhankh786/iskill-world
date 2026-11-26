@@ -1,12 +1,25 @@
 // iSkill World — Vercel Serverless Functions, shared helpers.
-// Data lives in ONE Vercel Blob key ("data.json") as JSON:
-// { categories, courses, orders, admin, settings }.
+// Data lives in Vercel Blob as JSON:
+// { categories, courses, orders, users, admin, settings }.
 // If BLOB_READ_WRITE_TOKEN is not set (Blob store not linked yet),
 // data falls back to in-memory seed data so the storefront still works.
 import crypto from "node:crypto";
 async function blobApi(){ try { return await import("@vercel/blob"); } catch { return null; } }
 
 export const DATA_KEY = "data.json";
+// Versioned Blob keys: EVERY save writes a NEW key (data-<time>-<rand>.json)
+// and loads always pick the newest key from `blob.list`.
+// Why: overwriting the same "data.json" key does NOT invalidate Vercel's
+// edge cache — reads kept returning the OLD data.json for a minute or more
+// after a write. That one bug caused the whole chain of "second phone login
+// fails", duplicate order codes and "deleted account still logs in": every
+// handler does load -> mutate -> save, so a stale read silently dropped the
+// previous write. A fresh key has never been cached, so a fresh read always
+// sees the latest write. Old versions accumulate (each ~15 KB); the seller
+// can prune them from the Vercel dashboard — we never auto-delete, because
+// two near-simultaneous saves could otherwise delete each other's key.
+const DATA_PREFIX = "data";
+const VERSIONED_KEY = /^data-[0-9a-z]+-[0-9a-f]+\.json$/;
 let memoryData = null;
 
 export const CATEGORIES = ["Programming","Design","Digital Marketing","Business","Data Science","Language","Music","Photography"];
@@ -69,13 +82,19 @@ export async function loadData(opts) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const blob = await blobApi(); if (!blob) throw new Error("no blob package");
-        const { blobs } = await blob.list({ prefix: DATA_KEY, limit: 1 });
-        if (blobs && blobs[0]) {
-          const r = await fetch(blobs[0].url + (blobs[0].url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
+        const { blobs } = await blob.list({ prefix: DATA_PREFIX, limit: 100 });
+        const list = blobs || [];
+        // Newest versioned key first (list comes back newest-first);
+        // fall back to the legacy single "data.json" key (pre-versioning).
+        const newest = list.find((b) => VERSIONED_KEY.test(b.pathname || "")) || list.find((b) => (b.pathname || "") === DATA_KEY);
+        if (newest) {
+          const r = await fetch(newest.url + (newest.url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
           const data = await r.json();
           if (data && Array.isArray(data.courses)) { memoryData = ensureData(data); return memoryData; }
+          lastErr = new Error("bad data in blob");
+        } else {
+          lastErr = new Error("data.json not listed yet");
         }
-        lastErr = new Error("data.json not listed yet");
       } catch (e) { lastErr = e; }
       if (attempt < 2) await new Promise((res) => setTimeout(res, attempt === 0 ? 500 : 1200));
     }
@@ -110,7 +129,14 @@ export async function reloadFresh() {
 export async function saveData(data) {
   memoryData = data;
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    try { const blob = await blobApi(); if (!blob) return false; await blob.put(DATA_KEY, JSON.stringify(data), { access: "public", addRandomSuffix: false }); return true; }
+    try {
+      const blob = await blobApi(); if (!blob) return false;
+      // New unique key per save — never overwrite the same key (see note
+      // at the top: the edge cache serves stale overwrites for minutes).
+      const key = "data-" + Date.now().toString(36) + "-" + crypto.randomBytes(3).toString("hex") + ".json";
+      await blob.put(key, JSON.stringify(data), { access: "public", addRandomSuffix: false });
+      return true;
+    }
     catch (e) { return false; /* in-memory copy still works for this instance, but the caller must know it did NOT persist */ }
   }
   return true;
