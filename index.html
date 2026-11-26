@@ -1,0 +1,1932 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="logo.jpg" />
+<title>iSkill World — upgrade your skills, build your future</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ============ iSkill World — space tokens: white bg, #141414 text, #ff9500 accent ============ */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --surface2:#fff6e9; --ink:#141414; --dim:#5f5a52;
+  --border:#e9e4da; --accent:#ff9500; --accent-ink:#000000; --danger:#c62f28;
+  --orange:#ff9500; --orange-soft:#fff6e9; --green:#1e9e5a; --red:#c62f28; --blue:#229ed9;
+  --black:#000000; --ink2:#5f5a52; --muted:#5f5a52; --line:#e9e4da; --line2:#e9e4da;
+  --radius:18px;
+  --shadow:0 6px 20px rgba(20,20,20,.07);
+  --card-shadow:0 6px 20px rgba(20,20,20,.07);
+  color-scheme:light;
+}
+body[data-theme="dark"]{
+  --bg:#000000; --surface:#141414; --surface2:#1f1f1f; --ink:#ffffff; --dim:#b3b3b3;
+  --border:#2e2e2e; --accent:#ff9500; --orange-soft:#1f1f1f;
+  --ink2:#b3b3b3; --muted:#b3b3b3; --line:#2e2e2e; --line2:#2e2e2e;
+  --shadow:0 6px 20px rgba(0,0,0,.5);
+  --card-shadow:0 6px 20px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Poppins','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Poppins','Segoe UI',system-ui,sans-serif}
+button,select,input,textarea{font-family:inherit;min-height:2.25rem}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:1152px;margin:0 auto;padding:0 16px}
+main, #storefront{padding-bottom:64px}
+
+/* ---------- header: logo only + two round toggles ---------- */
+header.site{position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:1px solid var(--border)}
+@supports (background:color-mix(in srgb,white 90%,transparent)){
+  header.site{background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(8px)}
+}
+.nav{display:flex;align-items:center;gap:18px;padding:12px 0}
+.logo{display:flex;align-items:center;text-decoration:none;flex:none}
+.logo img{height:44px;width:auto;border-radius:8px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:9px}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.icon-btn:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 6px 14px -6px rgba(255,149,0,.55)}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn.off{opacity:.45}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--border);border-radius:12px;padding:10px 18px;font-weight:700;font-size:.93rem;cursor:pointer;text-decoration:none;background:var(--surface);color:var(--ink);transition:transform .12s,box-shadow .12s,border-color .12s}
+.btn:hover{border-color:var(--accent)}
+.btn:active{transform:translateY(1px)}
+.btn-orange{background:linear-gradient(135deg,#ffb020,#ff9500 55%,#ff8c00);color:#000;border-color:#ff9500;box-shadow:0 8px 18px -6px rgba(255,149,0,.55)}
+.btn-orange:hover{box-shadow:0 14px 26px -6px rgba(255,149,0,.65);transform:translateY(-2px)}
+.btn-white:hover{transform:translateY(-1px);box-shadow:0 8px 18px -8px rgba(20,20,20,.25)}
+.btn-white{background:var(--surface);border-color:var(--border);color:var(--ink)}
+.btn-black{background:#000;color:#fff;border-color:#000}
+.btn-ghost{box-shadow:none;border-color:transparent;background:transparent}
+.btn-sm{padding:7px 13px;font-size:.85rem;min-height:2.25rem}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-pill{border-radius:999px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* ---------- hero: centred, black logo banner ---------- */
+.hero{padding-top:24px;background:radial-gradient(640px 220px at 50% 0,rgba(255,149,0,.10),transparent 70%)}
+@media(min-width:640px){.hero{padding-top:40px}}
+.hero-inner{max-width:768px;margin:0 auto;text-align:center}
+.hero-banner{background:#000;border-radius:28px;padding:36px 24px;box-shadow:0 18px 40px rgba(0,0,0,.22),0 0 0 1px rgba(255,149,0,.28),0 0 64px rgba(255,149,0,.20);animation:reveal .7s ease both}
+@media(min-width:640px){.hero-banner{padding:36px 40px}}
+.hero-banner img{width:100%;max-width:448px;margin:0 auto}
+.hero h1{font-size:36px;font-weight:800;line-height:1.15;letter-spacing:-.01em;margin:28px 0 0}
+@media(min-width:640px){.hero h1{font-size:48px}}
+.hero h1 .hl-box{display:inline-block;background:var(--accent);color:#000;padding:2px 12px;border-radius:16px}
+.hero p.lead{font-size:16px;line-height:1.65;color:var(--dim);max-width:448px;margin:12px auto 0;font-weight:400}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:24px}
+.hero-cta .btn{border-radius:999px;padding:12px 24px}
+.hero-stats{display:flex;gap:32px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+.hstat b{font-size:24px;font-weight:800;display:block}
+.hstat span{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+
+/* ---------- hero showcase card (floating, tilted badges) ---------- */
+.hero-showcase{max-width:448px;margin:44px auto 0;animation:heroFloat 5.5s ease-in-out infinite}
+.hero-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:26px;overflow:visible;box-shadow:0 22px 44px rgba(20,20,20,.13);transition:transform .25s ease;text-align:left}
+.hero-card .hc-cover{height:176px;border-radius:26px 26px 0 0;overflow:hidden;position:relative}
+@media(min-width:640px){.hero-card .hc-cover{height:208px}}
+.hc-grad{position:relative;width:100%;height:100%}
+.hc-mono{position:absolute;top:16px;left:16px;width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,.85);display:grid;place-items:center;font-size:24px;font-weight:800;color:#141414}
+.hc-catpill{position:absolute;left:16px;bottom:16px;background:rgba(0,0,0,.7);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px}
+.hero-card .hc-body{padding:20px}
+.hero-card h2{margin:0;font-size:20px;font-weight:800;line-height:1.3}
+.hero-card p{margin:6px 0 0;color:var(--dim);font-size:14px;font-weight:500}
+.hc-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px}
+.hc-price{font-weight:800;font-size:24px;color:var(--accent)}
+.hc-price s{color:var(--dim);font-size:16px;margin-right:7px;font-weight:600}
+.hc-row .btn{border-radius:999px;padding:10px 20px;font-size:14px}
+.float-chip{position:absolute;top:-14px;font-weight:700;font-size:12px;padding:8px 13px;border-radius:999px;z-index:2;box-shadow:0 6px 16px rgba(20,20,20,.18)}
+.chip-a{right:14px;transform:rotate(3deg);background:var(--accent);color:#000}
+.chip-b{left:14px;transform:rotate(-6deg);background:#fff;color:#141414;border:1px solid var(--border)}
+
+/* ---------- sections ---------- */
+section.block{margin-top:48px}
+@media(min-width:640px){section.block{margin-top:56px}}
+.sec-head{margin-bottom:20px}
+.sec-head h2{font-size:clamp(24px,4vw,32px);font-weight:800;margin:0;position:relative;padding-bottom:12px}
+.sec-head h2::after{content:"";position:absolute;left:0;bottom:0;width:56px;height:4px;border-radius:99px;background:linear-gradient(90deg,#ffb020,#ff9500)}
+.sec-head h2 span{color:var(--accent)}
+.sec-head p{margin:6px 0 0;color:var(--dim);font-size:14px;font-weight:400;max-width:56ch}
+
+/* ---------- categories ---------- */
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:640px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1024px){.cat-grid{grid-template-columns:repeat(4,1fr)}}
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 4px 14px rgba(20,20,20,.05);transition:border-color .15s,transform .15s;text-align:left;width:100%;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.cat-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.cat-card.active{border-color:var(--accent);background:var(--surface2)}
+.cat-ic{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:grid;place-items:center}
+.cat-ic svg{width:21px;height:21px;color:var(--accent)}
+.cat-card h3{margin:0;font-size:16px;font-weight:700}
+.cat-card p{margin:0;font-size:12px;font-weight:500;color:var(--dim)}
+
+/* ---------- catalog ---------- */
+.search-box{position:relative;width:100%;margin-bottom:16px}
+.search-box svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--dim)}
+.search-box input{width:100%;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--ink);padding:12px 16px 12px 44px;font-size:15px;font-weight:500;outline:none}
+.search-box input:focus{border-color:var(--accent)}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:40px;border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:999px;padding:0 16px;font-weight:600;font-size:14px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip.active{background:var(--accent);color:#000;border-color:var(--accent);box-shadow:0 8px 18px -6px rgba(255,149,0,.55)}
+.course-grid{display:grid;gap:16px}
+@media(min-width:640px){.course-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.course-grid{grid-template-columns:repeat(3,1fr)}}
+.course-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;cursor:pointer;animation:riseIn .55s ease both}
+.course-card:hover{border-color:var(--accent);box-shadow:0 14px 30px rgba(255,149,0,.18)}
+/* 21st.dev Course Design Cards style: coloured top band per category */
+.course-card{border-top:6px solid var(--cc,#FF9500)}
+.course-card.cc-green{--cc:#22A06B}
+.course-card.cc-orange{--cc:#FF9500}
+.course-card.cc-red{--cc:#E5484D}
+.course-card.cc-blue{--cc:#2F6FED}
+.cc-rate{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--dim)}
+.cc-track{flex:1;height:8px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;overflow:hidden}
+.cc-fill{height:100%;background:var(--cc,#FF9500);border-radius:999px}
+.cc-val{font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap}
+.cc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;font-weight:600;color:var(--dim)}
+.cc-students{display:inline-flex;align-items:center;gap:5px}
+.cc-students svg{width:15px;height:15px}
+.cc-pill{background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:999px;color:var(--ink)}
+.course-cover{position:relative;height:160px;overflow:hidden;background:var(--surface2)}
+.course-cover img{width:100%;height:100%;object-fit:cover}
+.course-cover svg.art{width:100%;height:100%;display:block}
+.free-badge,.off-badge,.owned-badge{position:absolute;top:11px;font-weight:700;font-size:11px;letter-spacing:.04em;padding:5px 10px;border-radius:999px;z-index:2}
+.free-badge{right:11px;background:var(--accent);color:#000}
+.off-badge{right:11px;background:#000;color:#fff}
+.owned-badge{left:11px;background:var(--accent);color:#000}
+.course-body{padding:16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.course-eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:6px}
+.course-eyebrow svg{width:14px;height:14px}
+.course-body h3{margin:0;font-size:18px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.course-desc{margin:0;font-size:14px;line-height:1.55;color:var(--dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.course-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:8px}
+.price{font-weight:800;font-size:20px;color:var(--accent)}
+.price s{font-size:14px;color:var(--dim);font-weight:600;margin-left:6px}
+.price .free{color:var(--green)}
+.details-link{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+.empty-box{grid-column:1/-1;text-align:center;padding:52px 20px;background:var(--surface2);border:2px dashed var(--border);border-radius:18px}
+.empty-box h3{margin:0 0 6px}
+.empty-box p{margin:0;color:var(--dim);font-weight:500}
+
+/* ---------- how it works ---------- */
+.how-grid{display:grid;gap:12px}
+@media(min-width:640px){.how-grid{grid-template-columns:repeat(3,1fr)}}
+.how-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+.how-num{font-size:30px;font-weight:800;color:var(--accent);line-height:1}
+.how-card h3{margin:8px 0 0;font-size:18px;font-weight:700}
+.how-card p{margin:4px 0 0;font-size:14px;line-height:1.6;color:var(--dim)}
+
+/* ---------- my courses ---------- */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:20px}
+.panel h3{margin:0 0 4px;font-size:19px;font-weight:700}
+.panel .sub{color:var(--dim);font-weight:400;font-size:14px;margin:0 0 20px;line-height:1.55}
+.field{margin-bottom:14px}
+.field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--ink);padding:10px 13px;font-size:15px;font-weight:500;outline:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field .hint{font-size:12px;color:var(--dim);font-weight:500;margin-top:5px}
+.input-icon{position:relative}
+.input-icon svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--dim)}
+.input-icon input{padding-left:44px}
+.mine-grid{display:grid;gap:12px;margin-top:16px}
+@media(min-width:640px){.mine-grid{grid-template-columns:repeat(2,1fr)}}
+.mine-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.mine-card.owned{border-color:rgba(255,149,0,.5)}
+.mine-cover{position:relative;height:128px;overflow:hidden}
+.mine-cover svg.art{width:100%;height:100%;display:block}
+.mine-body{padding:16px;display:flex;flex-direction:column;gap:8px}
+.mine-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.mine-head b{font-size:16px;line-height:1.35}
+.mine-body .hint{font-size:12px;color:var(--dim);font-weight:500}
+.mine-rest{margin-top:12px;display:grid;gap:12px}
+#myResetLink{display:inline-block;margin-top:14px;font-size:12px;color:var(--dim);text-decoration:underline}
+.mine-order{background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:14px 16px;margin-top:12px;line-height:1.55}
+
+/* ---------- telegram band + floating button ---------- */
+.tg-band{background:#000;border-radius:28px;padding:24px;text-align:center;color:#fff;box-shadow:0 18px 40px rgba(0,0,0,.22)}
+@media(min-width:640px){.tg-band{padding:32px}}
+.tg-ic{width:56px;height:56px;border-radius:50%;background:var(--accent);display:grid;place-items:center;margin:0 auto}
+.tg-ic svg{width:26px;height:26px;color:#000}
+.tg-band h2{margin:16px 0 0;font-size:24px;font-weight:700}
+@media(min-width:640px){.tg-band h2{font-size:30px}}
+.tg-band p{margin:8px auto 0;color:rgba(255,255,255,.7);font-size:14px;max-width:448px;line-height:1.6}
+.tg-band .btn{margin-top:20px;border-radius:12px;padding:12px 24px;font-size:16px}
+.tg-float{position:fixed;bottom:20px;right:20px;z-index:40;width:56px;height:56px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 10px 24px rgba(255,149,0,.5);text-decoration:none}
+.tg-float svg{width:24px;height:24px;color:#000}
+.tg-float::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);animation:pulseRing 2.8s ease-out infinite}
+
+/* ---------- footer ---------- */
+footer.site{margin-top:56px;border-top:1px solid var(--border);padding:24px 0 8px;text-align:center}
+.foot-logo{display:inline-block;background:#000;border-radius:16px;padding:12px 20px;box-shadow:0 0 0 1px rgba(0,0,0,.1)}
+.foot-logo img{height:48px;width:auto}
+footer.site p{font-size:14px;color:var(--dim);max-width:448px;margin:6px auto 0;line-height:1.6}
+footer.site .btn{margin-top:12px;border-radius:999px;padding:10px 16px;font-size:14px}
+.foot-copy{font-size:12px;color:var(--dim);margin-top:20px}
+
+/* ---------- modal ---------- */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);z-index:50;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-back.open{display:flex}
+.modal{background:var(--surface);width:100%;max-width:512px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;animation:popIn .45s ease}
+@media(min-width:640px){.modal-back{align-items:center;padding:20px}.modal{border-radius:24px}}
+.modal .m-cover{height:208px;overflow:hidden;background:var(--surface2)}
+.modal .m-cover img,.modal .m-cover svg.art{width:100%;height:100%;object-fit:cover}
+.modal .m-body{padding:20px 20px 24px}
+.modal h3{font-size:24px;font-weight:700;margin:6px 0 8px;letter-spacing:-.01em}
+.modal .m-desc{color:var(--dim);line-height:1.65;font-weight:400;font-size:14px}
+.modal-wrap{position:relative}
+.x-btn{position:absolute;top:12px;right:12px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;display:grid;place-items:center;font-size:16px;font-weight:700}
+.course-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.meta-pill{border:1px solid var(--border);background:var(--surface2);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--ink)}
+.m-price-box{border:1px solid var(--border);background:var(--surface2);border-radius:16px;padding:16px;margin-top:16px}
+.m-price{font-size:30px;font-weight:800;color:var(--accent)}
+.m-price s{font-size:16px;color:var(--dim);font-weight:600;margin-left:8px}
+.m-trust{margin:6px 0 0;font-size:13px;color:var(--dim)}
+.owned-note{font-weight:700;color:var(--green);margin:0 0 10px}
+#cmEnroll{width:100%;border-radius:12px;margin-top:16px}
+#cmAsk{width:100%;border-radius:12px;margin-top:10px}
+#cmAccess{margin-top:14px;display:grid;gap:10px}
+.form-err{background:#fdecea;border:1.5px solid var(--danger);color:#8f1d12;border-radius:10px;padding:9px 12px;font-weight:600;font-size:14px;margin-bottom:13px;display:none}
+body[data-theme="dark"] .form-err{background:#3a1512;color:#ffb4a8}
+.form-ok{background:#e7f6ee;border:1.5px solid var(--green);color:#0e5c33;border-radius:10px;padding:11px 13px;font-weight:600;font-size:14px;margin-bottom:13px;display:none;line-height:1.5}
+body[data-theme="dark"] .form-ok{background:#123324;color:#9fe8c0}
+
+/* ---------- admin ---------- */
+#adminView{display:none}
+body.admin-mode #storefront,body.admin-mode footer.site,body.admin-mode .tg-float{display:none}
+body.admin-mode #adminView{display:block}
+.admin-shell{max-width:1060px;margin:0 auto;padding:28px 16px 70px}
+.pin-card{max-width:420px;margin:7vh auto 0;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 14px 30px rgba(20,20,20,.12);padding:30px 28px;text-align:center}
+.pin-card h2{margin:10px 0 6px;font-size:22px}
+.pin-card p{color:var(--dim);font-weight:400;font-size:14px;line-height:1.55;margin:0 0 18px}
+.pin-card input{text-align:center;font-size:20px;letter-spacing:.35em;font-weight:700}
+.admin-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.admin-top h2{margin:0;font-size:25px;font-weight:800}
+.admin-top h2 span{color:var(--accent)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.tab{border:1px solid var(--border);background:var(--surface);border-radius:11px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:14px;color:var(--ink)}
+.tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.img-drop{border:2px dashed var(--border);border-radius:13px;background:var(--surface2);padding:14px;text-align:center}
+.img-drop img{max-height:150px;margin:0 auto 10px;border-radius:9px}
+.img-drop .or{font-size:12px;font-weight:700;color:var(--dim);margin:8px 0}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+@media(min-width:640px){.stat-row{grid-template-columns:repeat(5,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:17px;box-shadow:var(--shadow)}
+.stat b{font-size:27px;font-weight:800;display:block}
+.stat span{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding:9px 8px;border-bottom:2px solid var(--border)}
+.tbl td{padding:11px 8px;border-bottom:1px solid var(--border);font-weight:500;vertical-align:middle}
+.tbl .row-actions{display:flex;gap:7px;flex-wrap:wrap}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
+.pill.pend{background:#fff3d6}.pill.appr{background:#dff5e8}.pill.rej{background:#fde3e0}
+body[data-theme="dark"] .pill.pend{background:#3a2f10}body[data-theme="dark"] .pill.appr{background:#123324}body[data-theme="dark"] .pill.rej{background:#3a1512}
+.tbl-scroll{overflow-x:auto}
+@media(max-width:760px){.tbl thead{display:none}.tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}.tbl tr{border:1px solid var(--border);border-radius:13px;margin-bottom:12px;padding:8px 10px}.tbl td{border:0;padding:5px 4px}}
+
+/* ---------- toast / notice ---------- */
+#toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:9px;align-items:center;width:min(92vw,430px)}
+.toast{background:#000;color:#fff7ea;border:2px solid var(--accent);border-radius:13px;padding:12px 17px;font-weight:600;font-size:14px;box-shadow:0 14px 30px -10px rgba(0,0,0,.5);text-align:center;animation:popIn .22s ease;line-height:1.45}
+.toast.err{border-color:var(--danger)}
+.demo-notice{background:#fff3d6;border:2px solid var(--accent);color:#7a3a00;border-radius:12px;padding:12px 16px;font-weight:600;font-size:14px;line-height:1.5}
+
+/* ---------- animations ---------- */
+@keyframes reveal{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes pulseRing{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.7);opacity:0}}
+@keyframes up{from{transform:translateY(26px);opacity:.4}to{transform:none;opacity:1}}
+.course-card{animation:riseIn .55s ease both}
+.support-line{margin-top:16px;font-size:14px;color:var(--dim);text-align:center}.support-line a{color:var(--accent);font-weight:700;text-decoration:none}
+/* scroll reveal: every section + footer animates in on scroll */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s cubic-bezier(.22,.61,.36,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* ---------- hamburger drawer + bottom nav (app style) ---------- */
+.drawer-back{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:none}
+.drawer-back.open{display:block}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,84vw);background:var(--surface);color:var(--ink);z-index:61;transform:translateX(-105%);transition:transform .25s ease;padding:18px 14px;display:flex;flex-direction:column;gap:4px;box-shadow:0 0 40px rgba(0,0,0,.3);overflow:auto}
+.drawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;gap:12px;padding:6px 6px 16px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.drawer-avatar{width:48px;height:48px;flex:none;border-radius:50%;background:var(--accent);color:#000;display:grid;place-items:center;font-weight:800;font-size:20px}
+.drawer-head b{display:block;font-size:16px}
+.drawer-head span{font-size:12px;color:var(--dim);font-weight:500;word-break:break-all}
+.drawer-head .icon-btn{margin-left:auto}
+.drawer-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:var(--ink);font-size:15px;font-weight:600;padding:13px 12px;border-radius:12px;cursor:pointer;text-decoration:none}
+.drawer-item:hover{background:var(--surface2)}
+.drawer-item.danger{color:var(--danger)}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:55;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(20,20,20,.08)}
+.bn-item{flex:1;background:none;border:0;color:var(--dim);font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 0}
+.bn-item .bn-ic{font-size:19px;line-height:1}
+.bn-item.active{color:var(--accent)}
+body.admin-mode .bottom-nav,body.admin-mode .drawer,body.admin-mode .drawer-back{display:none}
+main,#storefront{padding-bottom:120px}
+.tg-float{bottom:84px}
+.pill.canc{background:#fde3e0}
+body[data-theme="dark"] .pill.canc{background:#3a1512}
+
+/* ---------- responsive ---------- */
+@media(max-width:960px){
+  .foot{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .grid2{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:repeat(3,1fr);gap:9px}
+  .stat b{font-size:20px}
+  .tg-band{padding:24px 20px}
+  .hero-banner{padding:24px 16px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1!important;transform:none!important}}
+</style>
+</head>
+<body data-theme="light">
+
+<header class="site">
+  <div class="wrap nav">
+    <button class="icon-btn" id="menuBtn" data-sound aria-label="Open menu" title="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <a class="logo" href="#" data-sound aria-label="iSkill World home">
+      <img src="logo.jpg" alt="iSkill World" />
+    </a>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeBtn" data-sound aria-label="Toggle light and dark theme" title="Light / dark theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+      </button>
+      <button class="icon-btn" id="soundBtn" data-sound aria-label="Toggle click sound" title="Click sound on/off">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none"/><path class="sw" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="sw" d="M18.2 6a9 9 0 0 1 0 12"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="drawer-back" id="drawerBack"></div>
+<nav class="drawer" id="drawer" aria-label="Menu">
+  <div class="drawer-head">
+    <span class="drawer-avatar" id="drawerAvatar">G</span>
+    <div><b id="drawerName">Guest</b><span id="drawerSub">Login to see your courses</span></div>
+    <button class="icon-btn" id="drawerClose" aria-label="Close menu">&#10005;</button>
+  </div>
+  <button class="drawer-item" data-view="home" data-sound>Home</button>
+  <button class="drawer-item" data-view="catalog" data-sound>Courses</button>
+  <button class="drawer-item" data-view="mine" data-sound>My Courses</button>
+  <button class="drawer-item" data-view="orders" data-sound>My Orders</button>
+  <a class="drawer-item" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" data-sound>Telegram Channel</a>
+  <a class="drawer-item" href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound>&#9992; Support &mdash; @iSkill_Admin</a>
+  <button class="drawer-item" id="drawerAuthBtn" data-sound>Login / Sign up</button>
+  <button class="drawer-item danger" id="drawerLogoutBtn" data-sound style="display:none">Logout</button>
+</nav>
+
+<div id="storefront">
+  <div class="wrap"><div id="backendNotice" class="demo-notice" style="display:none"></div></div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="wrap">
+      <div class="hero-inner">
+        <div class="hero-banner"><img src="logo.jpg" alt="iSkill World — upgrade your skills, build your future" /></div>
+        <h1>Upgrade your skills, <span class="hl-box">build your future.</span></h1>
+        <p class="lead">Hand-picked courses in every category, place your order, confirm payment on Telegram, and get instant Google Drive access to your course.</p>
+        <div class="hero-cta">
+          <a class="btn btn-orange btn-pill" href="#catalog" data-sound>Browse courses</a>
+          <a class="btn btn-white btn-pill" href="#how-it-works" data-sound>How it works</a>
+          <a class="btn btn-white btn-pill" href="#" data-view="mine" data-sound>My Courses</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hstat"><b>8</b><span>Categories</span></div>
+          <div class="hstat"><b id="statCourses">8</b><span>Courses live</span></div>
+          <div class="hstat"><b>Drive</b><span>Instant delivery</span></div>
+        </div>
+      </div>
+
+      <!-- HERO SHOWCASE: floating animated course card -->
+      <div class="hero-showcase">
+        <div style="position:relative">
+          <div class="hero-card" id="heroCard">
+            <div class="hc-cover" id="heroCover"></div>
+            <div class="hc-body">
+              <h2 id="heroCourseTitle">Complete Python Bootcamp — From Zero to Hero</h2>
+              <p id="heroCourseMeta">185 lessons · 32 hours · Beginner</p>
+              <div class="hc-row">
+                <span class="hc-price" id="heroCoursePrice"><s>₹1,999</s>₹499</span>
+                <a class="btn btn-orange" href="#catalog" data-sound>Start learning</a>
+              </div>
+            </div>
+          </div>
+          <span class="float-chip chip-b">★ Featured course</span>
+          <span class="float-chip chip-a">75% OFF today</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <section class="block" id="categories">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Categories</h2>
+        <p>Pick your category, top courses from every field, all in one place.</p>
+      </div>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+  </section>
+
+  <!-- CATALOG -->
+  <section class="block" id="catalog">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Course Catalog</h2>
+        <p>Tap a course, check the details, place your order, that is it.</p>
+      </div>
+      <label class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+        <input id="searchInput" type="search" placeholder="Search courses, Python, Design, Trading" aria-label="Search courses" />
+      </label>
+      <div class="chips" id="chipRow"></div>
+      <div class="course-grid" id="courseGrid"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="block" id="how-it-works">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>How It Works</h2>
+      </div>
+      <div class="how-grid">
+        <div class="how-card">
+          <div class="how-num">01</div>
+          <h3>Pick your course</h3>
+          <p>Choose a course from the catalog, login to your account, and place your order — just your name, nothing more.</p>
+        </div>
+        <div class="how-card">
+          <div class="how-num">02</div>
+          <h3>Pay on Telegram</h3>
+          <p>The payment gateway is coming soon. For now, payment is confirmed with the seller on Telegram, do not forget to share your order number.</p>
+        </div>
+        <div class="how-card">
+          <div class="how-num">03</div>
+          <h3>Learn in My Courses</h3>
+          <p>The seller approves your order, and the course lands in My Courses. Login any time to open it through its Drive link or its own Telegram channel. Yours forever, whatever the price does later. Only you can see your courses — nobody else can look them up.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY COURSES -->
+  <section class="block" id="my-courses">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>My Courses</h2>
+        <p>Every course you buy lives here forever — private to your account. Only you can see your courses after login. Price changes never affect a course you already own.</p>
+      </div>
+      <div class="panel" id="mineLoginPrompt">
+        <h3>Login to see your courses</h3>
+        <p class="sub">Your courses are private to your account. Login or create a free account to see what you bought.</p>
+        <button class="btn btn-orange" id="mineLoginBtn" data-sound>Login / Sign up</button>
+      </div>
+      <div id="mineContent" style="display:none">
+        <div id="myOrdersOut" style="margin-top:6px"></div>
+        <p class="support-line">Need help? <a href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound>Telegram Support @iSkill_Admin</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY ORDERS -->
+  <section class="block" id="my-orders">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>My Orders</h2>
+        <p>Every order you placed, with its status — pending, approved or cancelled.</p>
+      </div>
+      <div class="panel" id="ordersLoginPrompt">
+        <h3>Login to see your orders</h3>
+        <p class="sub">Your orders are private to your account.</p>
+        <button class="btn btn-orange" data-auth-open data-sound>Login / Sign up</button>
+      </div>
+      <div id="ordersContent" style="display:none">
+        <div class="tabs" id="myOrderTabs">
+          <button class="tab active" data-otab="all" data-sound>All</button>
+          <button class="tab" data-otab="pending" data-sound>Pending</button>
+          <button class="tab" data-otab="approved" data-sound>Approved</button>
+          <button class="tab" data-otab="cancelled" data-sound>Cancelled</button>
+        </div>
+        <div id="myOrdersList" style="margin-top:14px"></div>
+        <p class="support-line">Need help? <a href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound>Telegram Support @iSkill_Admin</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TELEGRAM -->
+  <section class="block" id="community">
+    <div class="wrap">
+      <div class="tg-band">
+        <div class="tg-ic">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.4 19 19.3c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2L7.2 13.2 2.7 11.8c-1-.3-1-1 .2-1.4l17.6-6.8c.8-.3 1.5.2 1.4 1.5z"/></svg>
+        </div>
+        <h2>Join the iSkill World community on Telegram</h2>
+        <p>New courses, offers and updates are announced first on our Telegram channel. Join now so you never miss a drop.</p>
+        <a class="btn btn-orange" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" data-sound>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.4 19 19.3c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2L7.2 13.2 2.7 11.8c-1-.3-1-1 .2-1.4l17.6-6.8c.8-.3 1.5.2 1.4 1.5z"/></svg>
+          Join on Telegram</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<a class="tg-float" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" aria-label="Chat on Telegram">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.4 19 19.3c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2L7.2 13.2 2.7 11.8c-1-.3-1-1 .2-1.4l17.6-6.8c.8-.3 1.5.2 1.4 1.5z"/></svg>
+</a>
+
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button class="bn-item active" data-view="home" data-sound><span class="bn-ic">&#8962;</span><span>Home</span></button>
+  <button class="bn-item" data-view="catalog" data-sound><span class="bn-ic">&#9783;</span><span>Courses</span></button>
+  <button class="bn-item" data-view="mine" data-sound><span class="bn-ic">&#9654;</span><span>My Courses</span></button>
+  <button class="bn-item" data-view="menu" data-sound><span class="bn-ic">&#9776;</span><span>Menu</span></button>
+</nav>
+
+<footer class="site">
+  <div class="wrap">
+    <span class="foot-logo"><img src="logo.jpg" alt="iSkill World" /></span>
+    <p>Premium courses from every category, delivered to your Google Drive or the course's own Telegram channel. Questions? Message us on the Telegram channel.</p>
+    <a class="btn btn-white btn-pill" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" data-sound>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.4 19 19.3c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2L7.2 13.2 2.7 11.8c-1-.3-1-1 .2-1.4l17.6-6.8c.8-.3 1.5.2 1.4 1.5z"/></svg>
+      Telegram Channel</a>
+    <a class="btn btn-white btn-pill" href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound style="margin-left:8px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.4 19 19.3c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2L7.2 13.2 2.7 11.8c-1-.3-1-1 .2-1.4l17.6-6.8c.8-.3 1.5.2 1.4 1.5z"/></svg>
+      Support @iSkill_Admin</a>
+    <p class="foot-copy">© 2026 iSkill World. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- ADMIN VIEW -->
+<div id="adminView">
+  <div class="admin-shell">
+    <div id="pinGate" class="pin-card">
+      <div class="cat-ic" style="margin:0 auto;background:var(--orange-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--orange)"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+      <h2 id="pinTitle">Admin Access</h2>
+      <p id="pinText">Enter your admin PIN to open the panel.</p>
+      <div class="form-err" id="pinErr"></div>
+      <div class="field"><input id="pinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" aria-label="Admin PIN" /></div>
+      <button class="btn btn-orange" id="pinBtn" data-sound style="width:100%;justify-content:center">Unlock Panel</button>
+      <button class="btn btn-ghost btn-sm" id="pinBack" data-sound style="margin-top:10px">← Back to website</button>
+    </div>
+
+    <div id="adminPanel" style="display:none">
+      <div class="admin-top">
+        <h2>Admin <span>Panel</span></h2>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="changePinBtn" data-sound>Change PIN</button>
+          <button class="btn btn-sm" id="lockBtn" data-sound>Lock</button>
+          <button class="btn btn-black btn-sm" id="exitAdminBtn" data-sound>Exit Admin</button>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b id="stCourses">0</b><span>Courses Live</span></div>
+        <div class="stat"><b id="stOrders">0</b><span>Total Orders</span></div>
+        <div class="stat"><b id="stPending">0</b><span>Pending Orders</span></div>
+        <div class="stat"><b id="stApproved">0</b><span>Approved</span></div>
+        <div class="stat"><b id="stRevenue">₹0</b><span>Revenue (approved)</span></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-tab="add" data-sound>Add Course</button>
+        <button class="tab" data-tab="drive" data-sound>Drive Import</button>
+        <button class="tab" data-tab="mine" data-sound>My Courses</button>
+        <button class="tab" data-tab="orders" data-sound>Orders</button>
+        <button class="tab" data-tab="settings" data-sound>Settings</button>
+      </div>
+
+      <div class="panel" data-panel="add">
+        <h3 id="addTitle">Add a new course</h3>
+        <p class="sub">Add a course manually. Upload a cover image or paste an image link — and add a Drive link and/or a Telegram channel link for this course.</p>
+        <div class="form-err" id="addErr"></div>
+        <div class="form-ok" id="addOk"></div>
+        <form id="addForm">
+          <input type="hidden" id="fEditId" />
+          <div class="grid2">
+            <div class="field"><label for="fTitle">Course title *</label><input id="fTitle" placeholder="e.g. Advanced Excel Mastery" /></div>
+            <div class="field"><label for="fCat">Category *</label><select id="fCat"></select></div>
+          </div>
+          <div class="field" id="newCatWrap" style="display:none"><label for="fNewCat">New category name</label><input id="fNewCat" placeholder="e.g. Video Editing" /></div>
+          <div class="grid2">
+            <div class="field"><label for="fPrice">Price (₹) *</label><input id="fPrice" type="number" min="0" step="1" placeholder="499 — use 0 for FREE" /></div>
+            <div class="field"><label for="fOldPrice">Original price (₹, optional)</label><input id="fOldPrice" type="number" min="0" step="1" placeholder="2999" /></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="fLevel">Level</label>
+              <select id="fLevel"><option>Beginner</option><option>Intermediate</option><option>Advanced</option><option>All Levels</option></select></div>
+            <div class="field"><label for="fLessons">Lessons (optional)</label><input id="fLessons" type="number" min="0" step="1" placeholder="e.g. 85" /></div>
+          </div>
+          <div class="field"><label for="fDesc">Description *</label><textarea id="fDesc" rows="3" placeholder="What will students learn? Who is this course for?"></textarea></div>
+          <div class="field"><label for="fTelegram">Telegram channel link for this course (optional)</label><input id="fTelegram" placeholder="https://t.me/+..." /><p class="hint">Owner can give a Telegram channel link instead of, or along with, Drive. Approved buyers get a Join button after payment.</p></div>
+          <div class="field"><label for="fDrive">Google Drive link (course material)</label><input id="fDrive" placeholder="https://drive.google.com/…" /><p class="hint">Students get this link after their order is approved. Leave blank if you deliver material another way.</p></div>
+          <div class="field"><label>Cover image</label>
+            <div class="img-drop">
+              <img id="imgPreview" alt="Course cover preview" style="display:none" />
+              <label class="btn btn-sm" for="fImgFile" data-sound style="cursor:pointer">Upload Image</label>
+              <input id="fImgFile" type="file" accept="image/*" style="display:none" />
+              <div class="or">OR</div>
+              <input id="fImgUrl" placeholder="Paste image link (https://…)" style="width:100%;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--ink);padding:9px 12px;font-weight:500" />
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button type="submit" class="btn btn-orange" id="addSubmit" data-sound>Publish Course</button>
+            <button type="button" class="btn" id="addReset" data-sound>Clear Form</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel" data-panel="drive" style="display:none">
+        <h3>Import from Google Drive</h3>
+        <p class="sub">Paste a Drive file link and the course is created from it, with the Drive thumbnail as its cover.</p>
+        <div class="form-err" id="drvErr"></div>
+        <div class="form-ok" id="drvOk"></div>
+        <form id="drvForm">
+          <div class="field"><label for="dLink">Google Drive link *</label><input id="dLink" placeholder="https://drive.google.com/file/d/…/view" /></div>
+          <div class="grid2">
+            <div class="field"><label for="dTitle">Course title *</label><input id="dTitle" placeholder="e.g. Complete Excel Course" /></div>
+            <div class="field"><label for="dCat">Category</label><select id="dCat"></select></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="dPrice">Price (₹)</label><input id="dPrice" type="number" min="0" step="1" placeholder="0 = FREE" /></div>
+            <div class="field"><label for="dImgUrl">Cover image link (optional)</label><input id="dImgUrl" placeholder="Leave blank to auto-use Drive thumbnail" /></div>
+          </div>
+          <button type="submit" class="btn btn-orange" data-sound>Import Course</button>
+        </form>
+      </div>
+
+      <div class="panel" data-panel="mine" style="display:none">
+        <h3>My Courses</h3>
+        <p class="sub">All live courses. Edit a course to change its price, Drive link, Telegram channel or cover — or remove it.</p>
+        <div class="field"><input id="mineSearch" placeholder="Search courses by title…" /></div>
+        <div class="tbl-scroll"><table class="tbl"><thead><tr><th>Course</th><th>Category</th><th>Price</th><th>Drive</th><th>Actions</th></tr></thead><tbody id="mineBody"></tbody></table></div>
+      </div>
+
+      <div class="panel" data-panel="orders" style="display:none">
+        <h3>Orders</h3>
+        <p class="sub">Approve an order after payment is confirmed — the buyer then gets the Drive link and the course Telegram channel.</p>
+        <div class="field"><select id="orderFilter"><option value="All">All orders</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Cancelled">Cancelled</option></select></div>
+        <div class="tbl-scroll"><table class="tbl"><thead><tr><th>Buyer</th><th>Course</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
+      </div>
+
+      <div class="panel" data-panel="settings" style="display:none">
+        <h3>Settings</h3>
+        <p class="sub">Hero showcase, Telegram channel and your admin PIN.</p>
+        <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;margin-bottom:16px">
+          <h3 style="font-size:18px">Hero showcase course</h3>
+          <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">The big animated course card at the top of the homepage, pick any course and it appears there with the floating animation. Choose Automatic to let the store show your first featured course instead.</p>
+          <form id="featForm" style="max-width:520px">
+            <div class="field"><label for="featuredCourse">Course shown in the hero animation</label><select id="featuredCourse"></select></div>
+            <div class="form-ok" id="featOk"></div>
+            <button class="btn btn-orange" type="submit" data-sound>Save hero course</button>
+          </form>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;margin-bottom:16px">
+          <h3 style="font-size:18px">Telegram channel</h3>
+          <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">The community channel link shown on the homepage, in the footer and after checkout.</p>
+          <form id="tgForm" style="max-width:520px">
+            <div class="field"><label for="tgUrl">Telegram channel link *</label><input id="tgUrl" placeholder="https://t.me/+jUiC3D_slQI3ZjY1" /></div>
+            <div class="form-ok" id="tgOk"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-orange" type="submit" data-sound>Save Telegram link</button>
+              <a class="btn" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" data-sound>Open channel</a>
+            </div>
+          </form>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px">
+          <h3 style="font-size:18px">Change PIN</h3>
+          <form id="pinChangeForm" style="max-width:420px;margin-top:12px">
+            <div class="field"><label for="pcOld">Current PIN</label><input type="password" id="pcOld" required /></div>
+            <div class="field"><label for="pcNew">New PIN (4–12 characters)</label><input type="password" id="pcNew" minlength="4" maxlength="12" required /></div>
+            <button class="btn btn-orange" type="submit" data-sound>Change PIN</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COURSE DETAIL MODAL -->
+<div class="modal-back" id="courseModal">
+  <div class="modal modal-wrap">
+    <button class="x-btn" data-close data-sound aria-label="Close">✕</button>
+    <div class="m-cover" id="cmCover"></div>
+    <div class="m-body">
+      <span class="course-eyebrow" id="cmCat"></span>
+      <h3 id="cmTitle"></h3>
+      <div class="course-meta" id="cmMeta"></div>
+      <p class="m-desc" id="cmDesc"></p>
+      <div class="m-price-box" id="cmPrice"></div>
+      <button class="btn btn-orange" id="cmEnroll" data-sound>Buy this course</button>
+      <a class="btn btn-white" id="cmAsk" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" data-sound>Ask on Telegram</a>
+      <div id="cmAccess"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-back" id="checkoutModal">
+  <div class="modal modal-wrap">
+    <button class="x-btn" data-close data-sound aria-label="Close">✕</button>
+    <div class="m-body">
+      <h3 id="coTitle" style="margin-top:8px"></h3>
+      <div class="form-err" id="coErr"></div>
+      <div class="form-ok" id="coOk"></div>
+      <form id="coForm">
+        <div class="field"><label for="coName">Your name *</label><input id="coName" placeholder="Full name" /></div>
+        <div class="field"><label for="coContact">Mobile number or Telegram username *</label><input id="coContact" placeholder="e.g. 98765 43210 or @username" /></div>
+        <div class="field"><label for="coMail">Email (optional)</label><input id="coMail" type="email" placeholder="you@example.com" /></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="price" id="coPrice"></div>
+          <button type="submit" class="btn btn-orange" data-sound>Place Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN / SIGNUP MODAL -->
+<div class="modal-back" id="authModal">
+  <div class="modal modal-wrap">
+    <button class="x-btn" data-close data-sound aria-label="Close">&#10005;</button>
+    <div class="m-body">
+      <h3 id="authTitle" style="margin-top:8px">Login</h3>
+      <p class="m-desc" id="authSub">Login to see your courses and orders — only you can see them.</p>
+      <div class="tabs" style="margin-top:14px">
+        <button class="tab active" id="authTabLogin" data-sound>Login</button>
+        <button class="tab" id="authTabSignup" data-sound>Sign up</button>
+      </div>
+      <div class="form-err" id="authErr"></div>
+      <div class="form-ok" id="authOk"></div>
+      <form id="authForm" style="margin-top:6px">
+        <div class="field" id="authNameWrap" style="display:none"><label for="authName">Your name *</label><input id="authName" placeholder="Full name" /></div>
+        <div class="field"><label for="authContact">Mobile number or email *</label><input id="authContact" placeholder="e.g. 98765 43210 or you@example.com" /></div>
+        <div class="field"><label for="authPass">Password (4&ndash;12 characters) *</label><input id="authPass" type="password" placeholder="Your password" /></div>
+        <button type="submit" class="btn btn-orange btn-block" id="authSubmit" data-sound>Login</button>
+      </form>
+      <p class="hint" style="margin-top:12px">Your password is stored only as a secure hash — nobody, not even the seller, can see it. If you bought a course before with the same mobile/email, it will appear in your account after signup.</p>
+    </div>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+
+"use strict";
+/* ================= backend layer (Vercel Functions + local fallback) ================= */
+var FN = "/api";
+var TELEGRAM_URL = "https://t.me/+jUiC3D_slQI3ZjY1";
+var MODE = "local", DATA = null, RAW = [];
+var TOKEN = "";
+try { TOKEN = localStorage.getItem("iskill_token") || ""; } catch (e) { TOKEN = ""; }
+var PIN_SET = null, adminAuthed = false;
+/* ---- user login state (separate from the admin TOKEN above) ---- */
+var USER_TOKEN = "";
+var USER = null;
+var authAfter = null; /* function to run right after a successful login/signup */
+var myOrdersCache = null;
+try { USER_TOKEN = localStorage.getItem("iskill_user_token") || ""; var _u = localStorage.getItem("iskill_user"); if(_u) USER = JSON.parse(_u); } catch (e) { USER_TOKEN = ""; USER = null; }
+
+async function sha256(s){ var b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2, "0"); }).join(""); }
+async function api(fn, opts, timeoutMs){
+  opts = opts || {}; timeoutMs = timeoutMs || 8000;
+  var c = new AbortController(); var t = setTimeout(function(){ c.abort(); }, timeoutMs);
+  try{
+    var headers = {"Content-Type": "application/json"};
+    var tk = (opts && opts.token === null) ? "" : ((opts && opts.token) || TOKEN);
+    if(tk) headers["Authorization"] = "Bearer " + tk;
+    var r = await fetch(FN + "/" + fn, {method: opts.method || "GET", body: opts.body, signal: c.signal, headers: headers});
+    clearTimeout(t);
+    var j = await r.json().catch(function(){ return {ok: false, error: "Bad response"}; });
+    if(!r.ok && !j.error) j.error = "Request failed (" + r.status + ")";
+    return j;
+  }catch(e){ clearTimeout(t); return {ok: false, error: "unreachable"}; }
+}
+
+function seedLocal(){
+  function mk(id, title, cat, price, oldP, rating, students, dur, lessons, level, desc, inc, free){
+    return {id: id, title: title, category: cat, price: price, oldPrice: oldP, rating: rating, students: students, duration: dur, lessons: lessons, level: level, instructor: "iSkill World", description: desc, includes: inc, free: !!free, cover: "", coverKind: "gradient", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString()};
+  }
+  return {categories: ["Programming", "Design", "Digital Marketing", "Business", "Data Science", "Language", "Music", "Photography"], courses: [
+    mk("python-bootcamp", "Complete Python Bootcamp — From Zero to Hero", "Programming", 499, 1999, 4.8, 2140, "32 hours", 185, "Beginner", "Learn Python from scratch — basics, OOP, file handling and real projects, in simple English.", ["185 video lessons", "12 hands-on projects", "Certificate of completion", "Lifetime access"]),
+    mk("fullstack-web-dev", "Full-Stack Web Development", "Programming", 999, 3999, 4.9, 1875, "26 hours", 132, "Intermediate", "HTML, CSS, JavaScript, Node.js and databases — build and deploy complete websites.", ["132 video lessons", "8 portfolio projects", "Certificate of completion", "Lifetime access"]),
+    mk("uiux-figma", "UI/UX Design Masterclass", "Design", 799, 2499, 4.8, 1420, "14 hours", 74, "All Levels", "Design beautiful apps and websites in Figma — wireframes, prototypes and design systems.", ["74 video lessons", "6 design projects", "Certificate of completion", "Lifetime access"]),
+    mk("digital-marketing", "Digital Marketing Pro", "Digital Marketing", 599, 1999, 4.7, 1680, "12 hours", 68, "Beginner", "SEO, Instagram ads, funnels and analytics — grow any business online.", ["68 video lessons", "Real ad account walkthroughs", "Certificate of completion", "Lifetime access"]),
+    mk("stock-trading", "Stock Market and Trading", "Business", 899, 2999, 4.8, 2210, "16 hours", 82, "Beginner", "Understand the stock market, technical analysis, risk management and trading psychology.", ["82 video lessons", "Live chart examples", "Certificate of completion", "Lifetime access"]),
+    mk("data-science-ml", "Data Science and Machine Learning", "Data Science", 1299, 4999, 4.9, 1240, "30 hours", 148, "Intermediate", "Python for data, Pandas, visualisation and your first machine learning models.", ["148 video lessons", "10 datasets + projects", "Certificate of completion", "Lifetime access"]),
+    mk("spoken-english", "Spoken English Fluency Course", "Language", 0, 999, 4.7, 5300, "8 hours", 45, "Beginner", "Speak English confidently — daily speaking practice, grammar made simple and common conversations.", ["45 video lessons", "Speaking practice sheets", "Certificate of completion", "Lifetime access"], true),
+    mk("photography", "Photography Basics", "Photography", 699, 1999, 4.8, 980, "10 hours", 56, "All Levels", "Camera settings, composition, lighting and mobile + DSLR editing — from beginner to pro.", ["56 video lessons", "Photo assignments", "Certificate of completion", "Lifetime access"])
+  ], orders: [], users: [], admin: {pinHash: null}, settings: {telegramUrl: TELEGRAM_URL, featuredCourseId: ""}};
+}
+function localLoad(){ try{ var s = localStorage.getItem("iskill_local_v1"); if(s) return JSON.parse(s); }catch(e){} var d = seedLocal(); try{ localStorage.setItem("iskill_local_v1", JSON.stringify(d)); }catch(e){} return d; }
+function localSave(){ try{ localStorage.setItem("iskill_local_v1", JSON.stringify(DATA)); }catch(e){} }
+
+/* backend course shape -> card shape (driveUrl / telegramChannel stay hidden from public cards) */
+var ART_BY_CAT = {"Programming": "python", "Design": "figma", "Digital Marketing": "marketing", "Business": "trading", "Data Science": "data", "Language": "english", "Music": "generic", "Photography": "photo"};
+function artFor(c){
+  var t = (c.title || "").toLowerCase();
+  if(/python/.test(t)) return "python";
+  if(/full|web/.test(t)) return "web";
+  if(/figma|ui\/ux|ui|ux/.test(t)) return "figma";
+  if(/marketing/.test(t)) return "marketing";
+  if(/stock|trading/.test(t)) return "trading";
+  if(/data/.test(t)) return "data";
+  if(/english/.test(t)) return "english";
+  if(/photo/.test(t)) return "photo";
+  return ART_BY_CAT[c.category] || "generic";
+}
+function normCourse(c){
+  return {id: String(c.id), title: c.title, cat: c.category, price: Number(c.price) || 0, oldPrice: Number(c.oldPrice) || 0,
+    rating: c.rating || 4.8, lessons: c.lessons || 0, duration: c.duration || "", level: c.level || "Beginner", art: artFor(c),
+    desc: c.description || "", drive: c.driveUrl || "",
+    cover: (c.cover && c.coverKind !== "gradient") ? c.cover : "", telegram: c.telegramChannel || ""};
+}
+function normOrder(o){
+  var st = String(o.status || "pending").toLowerCase();
+  var label = st.charAt(0).toUpperCase() + st.slice(1);
+  return {id: o.id, code: o.code || "", courseId: o.courseId, title: o.courseTitle || o.title || "",
+    name: o.name || "", contact: o.contact || "", mail: o.email || o.mail || "",
+    amount: (o.amount != null ? o.amount : 0), status: label, rawStatus: st,
+    drive: o.driveUrl || o.drive || "", telegram: o.telegramChannel || o.telegram || "",
+    when: o.createdAt ? new Date(o.createdAt).toLocaleString("en-IN") : (o.when || "")};
+}
+function applyServerData(courses, catNames){
+  RAW = courses || [];
+  state.categories = (catNames && catNames.length ? catNames.slice() : ["Programming", "Design", "Digital Marketing", "Business", "Data Science", "Language", "Music", "Photography"]);
+  state.courses = RAW.map(normCourse);
+}
+
+/* ---- hero showcase: admin-picked course, or "Automatic" = first course ---- */
+function featuredCourse(){
+  var fid = (DATA && DATA.settings && DATA.settings.featuredCourseId) || "";
+  if(fid){ var f = state.courses.filter(function(x){ return String(x.id) === String(fid); })[0]; if(f) return f; }
+  return state.courses[0];
+}
+function setHeroCover(){
+  var c = featuredCourse();
+  if(!c) return;
+  $("heroCover").innerHTML = heroCoverHTML(c);
+  var ht = $("heroCourseTitle"); if(ht) ht.textContent = c.title;
+  var hm = $("heroCourseMeta"); if(hm){ var parts = [(c.lessons || 0) + " lessons"]; if(c.duration) parts.push(c.duration); parts.push(c.level || ""); hm.textContent = parts.join(" \u00b7 "); }
+  var hp = $("heroCoursePrice"); if(hp) hp.innerHTML = (c.oldPrice && c.oldPrice > c.price ? "<s>" + inr(c.oldPrice) + "</s>" : "") + (c.price ? inr(c.price) : "FREE");
+  var chipA = document.querySelector(".chip-a");
+  if(chipA) chipA.textContent = (c.oldPrice && c.oldPrice > c.price) ? Math.round((1 - c.price / c.oldPrice) * 100) + "% OFF Today" : "Best Seller";
+  /* left badge stays "Featured course" (space); rating is shown in the detail modal */
+}
+function applyTelegramLinks(){
+  document.querySelectorAll("[data-telegram]").forEach(function(a){ a.href = TELEGRAM_URL; });
+}
+async function loadCatalog(){
+  var r = await api("catalog");
+  var notice = $("backendNotice");
+  if(r && r.ok){
+    MODE = "live"; DATA = DATA || localLoad();
+    if(r.settings && r.settings.telegramUrl) TELEGRAM_URL = r.settings.telegramUrl;
+    if(DATA) DATA.settings = r.settings || DATA.settings || {telegramUrl: TELEGRAM_URL};
+    applyTelegramLinks();
+    applyServerData(r.courses, r.categories);
+    state.orders = [];
+    if(notice){ notice.style.display = "none"; notice.textContent = ""; }
+  } else {
+    MODE = "local"; DATA = localLoad();
+    if(DATA.settings && DATA.settings.telegramUrl) TELEGRAM_URL = DATA.settings.telegramUrl;
+    applyTelegramLinks();
+    applyServerData(DATA.courses, DATA.categories);
+    state.orders = (DATA.orders || []).map(normOrder);
+    if(notice){ notice.textContent = "Demo mode — backend not connected. Courses shown are the built-in samples and any change here stays on this device only. To make courses live for everyone, deploy this folder with the Vercel CLI (see README-VERCEL.txt) — drag-and-drop alone does not start the backend."; notice.style.display = "block"; }
+  }
+  renderAll(); setHeroCover();
+}
+async function refreshPinStatus(){
+  if(MODE === "live"){ var r = await api("admin?action=status"); PIN_SET = !!(r && r.pinSet); }
+  else { PIN_SET = !!(DATA && DATA.admin && DATA.admin.pinHash); }
+}
+async function refreshAdminData(){
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "list"})});
+    if(!r || !r.ok){
+      adminAuthed = false; TOKEN = "";
+      try{ localStorage.removeItem("iskill_token"); }catch(e){}
+      showPinGate(); toast("Session expired — enter your PIN again.", true); return false;
+    }
+    DATA.categories = r.categories; DATA.courses = r.courses; DATA.orders = r.orders || [];
+    DATA.settings = r.settings || DATA.settings || {telegramUrl: TELEGRAM_URL};
+    if(DATA.settings.telegramUrl){ TELEGRAM_URL = DATA.settings.telegramUrl; applyTelegramLinks(); }
+    var tg = $("tgUrl"); if(tg && DATA.settings.telegramUrl) tg.value = DATA.settings.telegramUrl;
+    RAW = r.courses; state.orders = DATA.orders.map(normOrder);
+    applyServerData(r.courses, r.categories);
+  } else {
+    RAW = DATA.courses; state.orders = (DATA.orders || []).map(normOrder);
+    applyServerData(DATA.courses, DATA.categories);
+  }
+  fillCatSelects(); renderAll(); setHeroCover();
+  return true;
+}
+
+/* ================= state ================= */
+var state = {categories: [], courses: [], orders: [], filter: "All", editingId: null, uploadedImg: ""};
+var soundOn = true;
+var PURCHASED = {};
+var checkoutCourseId = null;
+var detailCourseId = null;
+
+/* ================= helpers ================= */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>\"']/g, function(c){ return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); }
+function inr(n){ return "₹" + Number(n || 0).toLocaleString("en-IN"); }
+function uid(){ return "c" + Date.now().toString(36) + Math.floor(Math.random() * 999).toString(36); }
+function toast(msg, isErr){
+  var t = document.createElement("div"); t.className = "toast" + (isErr ? " err" : ""); t.textContent = msg;
+  $("toasts").appendChild(t); setTimeout(function(){ t.remove(); }, 3600);
+}
+/* contact normalisation: 98765 43210, +91 98765 43210 and 09876543210 are the same buyer */
+function normContact(v){
+  var d = String(v || "").toLowerCase().replace(/[^a-z0-9@._-]/g, "");
+  if(/^\d+$/.test(d)){
+    if(d.length === 12 && d.indexOf("91") === 0) d = d.slice(2);
+    else if(d.length === 11 && d.indexOf("0") === 0) d = d.slice(1);
+  }
+  return d;
+}
+
+/* ================= click sound ================= */
+var actx = null;
+function blip(freq){
+  if(!soundOn) return;
+  try{
+    if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === "suspended") actx.resume();
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = "triangle"; o.frequency.value = freq || 620;
+    g.gain.setValueAtTime(0.08, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.09);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + 0.1);
+  }catch(e){}
+}
+document.addEventListener("click", function(e){
+  var el = e.target.closest("[data-sound], button, .chip, .cat-card, .tab, a.btn");
+  if(el) blip(el.classList && el.classList.contains("btn-orange") ? 740 : 560);
+});
+
+/* extra sounds: soft hover tick, modal swoosh, success chime */
+function tone(freq, dur, type, vol, delay){
+  if(!soundOn) return;
+  try{
+    if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === "suspended") actx.resume();
+    var t0 = actx.currentTime + (delay || 0);
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || "triangle"; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.06, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.1));
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + (dur || 0.1) + 0.02);
+  }catch(e){}
+}
+function chime(){ tone(660, .12, "sine", .07, 0); tone(880, .18, "sine", .07, .09); tone(1320, .2, "sine", .04, .18); }
+function swoosh(){ tone(320, .09, "triangle", .05, 0); tone(540, .11, "triangle", .05, .06); }
+var lastHover = 0;
+document.addEventListener("mouseover", function(e){
+  var el = e.target.closest(".course-card, .cat-card, .btn, .chip, .tab, .icon-btn");
+  if(!el) return;
+  var now = Date.now();
+  if(now - lastHover < 90) return;
+  lastHover = now;
+  tone(980, .05, "sine", .018, 0);
+});
+
+/* scroll reveal: every section + footer slides in when scrolled into view */
+(function(){
+  var els = document.querySelectorAll("section.block, footer.site");
+  els.forEach(function(el){ el.classList.add("reveal"); });
+  if(!("IntersectionObserver" in window)){ els.forEach(function(el){ el.classList.add("in"); }); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+  }, {threshold: 0.12});
+  els.forEach(function(el){ io.observe(el); });
+})();
+
+/* ================= cover art ================= */
+var GRADIENTS = [
+  ["#fff1d6", "#ffb020"], ["#ffe8c2", "#ff9500"], ["#f7f7f7", "#d9d9d9"],
+  ["#ffe9c9", "#ff9e2c"], ["#fff6e9", "#ffc46b"], ["#f2f2f2", "#c9c9c9"],
+  ["#ffedd1", "#ffa726"], ["#fff3dc", "#ff8c00"]
+];
+function monogram(title){
+  var words = String(title || "").split(" ").filter(Boolean);
+  var a = words[0] ? words[0].charAt(0) : "i";
+  var b = words[1] ? words[1].charAt(0) : "S";
+  return (a + b).toUpperCase();
+}
+function gradFor(course){
+  var h = 0, s = String(course.id || course.title || "");
+  for(var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 997;
+  return GRADIENTS[h % GRADIENTS.length];
+}
+function artSVG(course){
+  var g = gradFor(course);
+  return "<svg class=\"art\" viewBox=\"0 0 400 225\" preserveAspectRatio=\"xMidYMid slice\" role=\"img\" aria-label=\"" + esc(course.title) + " cover art\">"
+    + "<defs><linearGradient id=\"g" + course.id + "\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"" + g[0] + "\"/><stop offset=\"1\" stop-color=\"" + g[1] + "\"/></linearGradient></defs>"
+    + "<rect width=\"400\" height=\"225\" fill=\"url(#g" + course.id + ")\"/>"
+    + "<text x=\"200\" y=\"118\" text-anchor=\"middle\" font-family=\"Poppins, sans-serif\" font-weight=\"800\" font-size=\"48\" fill=\"#141414\" fill-opacity=\"0.75\">" + esc(monogram(course.title)) + "</text>"
+    + "<text x=\"200\" y=\"152\" text-anchor=\"middle\" font-family=\"Poppins, sans-serif\" font-weight=\"700\" font-size=\"11\" letter-spacing=\"3\" fill=\"#141414\" fill-opacity=\"0.75\">" + esc((course.cat || "").toUpperCase()) + "</text>"
+    + "<rect y=\"185\" width=\"400\" height=\"40\" fill=\"#000\" fill-opacity=\"0.10\"/>"
+    + "</svg>";
+}
+function heroCoverHTML(course){
+  var g = gradFor(course);
+  return "<div class=\"hc-grad\" style=\"background:linear-gradient(135deg," + g[0] + "," + g[1] + ")\">"
+    + "<span class=\"hc-mono\">" + esc(monogram(course.title)) + "</span>"
+    + "<span class=\"hc-catpill\">" + esc((course.cat || "").toUpperCase()) + "</span></div>";
+}
+function coverHTML(course){
+  if(course.cover) return "<img src=\"" + esc(course.cover) + "\" alt=\"" + esc(course.title) + " cover\" onerror=\"this.outerHTML = window.__artFallback(this)\" data-art-for=\"" + course.id + "\">";
+  return artSVG(course);
+}
+window.__artFallback = function(img){
+  var c = state.courses.filter(function(x){ return x.id === img.getAttribute("data-art-for"); })[0];
+  return c ? artSVG(c) : "";
+};
+
+/* ================= storefront render ================= */
+var CAT_ICONS = {
+  "Programming": "<path d=\"m8 8-5 4 5 4M16 8l5 4-5 4M13.5 5l-3 14\"/>",
+  "Design": "<circle cx=\"12\" cy=\"12\" r=\"3.2\"/><path d=\"M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1\"/>",
+  "Digital Marketing": "<path d=\"m3 11 14-5v12L3 14v-3z\"/><path d=\"M17 8.5a4 4 0 0 1 0 7M7 14v4a2 2 0 0 0 4 0v-3.5\"/>",
+  "Business": "<rect x=\"3\" y=\"7.5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M9 7.5V6a3 3 0 0 1 6 0v1.5M3 13h18\"/>",
+  "Data Science": "<path d=\"M4 20V10M10 20V4M16 20v-8M22 20H2\"/>",
+  "Language": "<path d=\"M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z\"/><path d=\"M4 20.5A2.5 2.5 0 0 1 6.5 18H20\"/>",
+  "Music": "<path d=\"M9 18V6l10-2v11.5\"/><circle cx=\"6.5\" cy=\"18\" r=\"2.5\"/><circle cx=\"16.5\" cy=\"15.5\" r=\"2.5\"/>",
+  "Photography": "<path d=\"M4 8h3l2-2.5h6L17 8h3a1.5 1.5 0 0 1 1.5 1.5V19a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 19V9.5A1.5 1.5 0 0 1 4 8z\"/><circle cx=\"12\" cy=\"13.5\" r=\"3.6\"/>"
+};
+function catIcon(name){
+  var p = CAT_ICONS[name] || "<path d=\"M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z\"/><path d=\"M8 8h8M8 12h5\"/>";
+  return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\">" + p + "</svg>";
+}
+function countIn(cat){ return state.courses.filter(function(c){ return c.cat === cat; }).length; }
+
+function renderCats(){
+  var g = $("catGrid"); g.innerHTML = "";
+  state.categories.forEach(function(cat){
+    var b = document.createElement("button");
+    b.className = "cat-card" + (state.filter === cat ? " active" : ""); b.setAttribute("data-sound", "");
+    b.innerHTML = "<span class=\"cat-ic\">" + catIcon(cat) + "</span><h3>" + esc(cat) + "</h3><p>" + countIn(cat) + " course" + (countIn(cat) === 1 ? "" : "s") + "</p>";
+    b.addEventListener("click", function(){ state.filter = (state.filter === cat ? "All" : cat); renderCats(); renderChips(); renderCourses(); });
+    g.appendChild(b);
+  });
+}
+function renderChips(){
+  var row = $("chipRow"); row.innerHTML = "";
+  ["All"].concat(state.categories).forEach(function(cat){
+    var b = document.createElement("button");
+    b.className = "chip" + (state.filter === cat ? " active" : ""); b.textContent = cat; b.setAttribute("data-sound", "");
+    b.addEventListener("click", function(){ state.filter = cat; renderCats(); renderChips(); renderCourses(); });
+    row.appendChild(b);
+  });
+}
+function usersSVG(){ return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"9\" cy=\"8\" r=\"3.5\"/><path d=\"M2.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5\"/><path d=\"M16 4.6a3.5 3.5 0 0 1 0 6.8M17.5 15.4c2 .6 3.5 2 4 4.6\"/></svg>"; }
+function catColorClass(cat){
+  var map = {"Programming":"cc-orange","Design":"cc-green","Digital Marketing":"cc-red","Business":"cc-blue","Data Science":"cc-orange","Language":"cc-green","Photography":"cc-red"};
+  if(map[cat]) return map[cat];
+  var cols = ["cc-green","cc-orange","cc-red","cc-blue"], h = 0;
+  for(var i = 0; i < cat.length; i++) h = (h * 31 + cat.charCodeAt(i)) % 997;
+  return cols[h % 4];
+}
+function starSVG(){ return "<svg viewBox=\"0 0 24 24\" fill=\"#FF8C00\"><path d=\"m12 2.6 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5L2.5 9.5l6.6-.9z\"/></svg>"; }
+function bookSVG(){ return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg>"; }
+function metaHTML(c){
+  var pills = [];
+  if(c.lessons) pills.push((c.lessons || 0) + " lessons");
+  if(c.duration) pills.push(c.duration);
+  if(c.level) pills.push(c.level);
+  pills.push("★ " + (c.rating || 4.8));
+  return pills.map(function(p){ return "<span class=\"meta-pill\">" + esc(p) + "</span>"; }).join("");
+}
+function priceHTML(c){
+  if(!c.price) return "<div class=\"price\"><span class=\"free\">Free</span></div>";
+  return "<div class=\"price\">" + inr(c.price) + (c.oldPrice && c.oldPrice > c.price ? " <s>" + inr(c.oldPrice) + "</s>" : "") + "</div>";
+}
+function offPct(c){ return (c.oldPrice && c.oldPrice > c.price) ? Math.round((1 - c.price / c.oldPrice) * 100) : 0; }
+function renderCourses(){
+  var q = ($("searchInput").value || "").toLowerCase().trim();
+  var sort = $("sortSel") ? $("sortSel").value : "pop";
+  var list = state.courses.filter(function(c){
+    return (state.filter === "All" || c.cat === state.filter)
+      && (!q || (c.title + " " + c.cat + " " + c.desc).toLowerCase().indexOf(q) > -1);
+  });
+  if(sort === "low") list.sort(function(a, b){ return a.price - b.price; });
+  if(sort === "high") list.sort(function(a, b){ return b.price - a.price; });
+  if(sort === "rating" || sort === "pop") list.sort(function(a, b){ return (b.rating || 0) - (a.rating || 0); });
+  var g = $("courseGrid"); g.innerHTML = "";
+  if(!list.length){
+    g.innerHTML = "<div class=\"empty-box\"><h3>No courses found</h3><p>Try a different search or category.</p></div>";
+    return;
+  }
+  list.forEach(function(c, i){
+    var card = document.createElement("article");
+    card.className = "course-card " + catColorClass(c.cat);
+    card.style.animationDelay = Math.min(i, 7) * 70 + "ms";
+    var owned = PURCHASED[c.id];
+    card.innerHTML = "<div class=\"course-cover\">" + coverHTML(c)
+      + (owned ? "<span class=\"owned-badge\">YOU OWN THIS</span>" : "")
+      + (!c.price ? "<span class=\"free-badge\">FREE</span>" : (offPct(c) ? "<span class=\"off-badge\">" + offPct(c) + "% OFF</span>" : ""))
+      + "</div><div class=\"course-body\"><span class=\"course-eyebrow\">" + bookSVG() + " " + esc(c.cat) + " \u00b7 " + esc(c.level || "") + "</span><h3>" + esc(c.title) + "</h3>"
+      + "<p class=\"course-desc\">" + esc(c.desc) + "</p>"
+      + "<div class=\"cc-rate\"><span>Rating</span><div class=\"cc-track\"><div class=\"cc-fill\" style=\"width:" + Math.round(((c.rating || 4.8) / 5) * 100) + "%\"></div></div><span class=\"cc-val\">" + (c.rating || 4.8) + " \u2605</span></div>"
+      + "<div class=\"cc-meta\"><span class=\"cc-students\">" + usersSVG() + " " + Number(c.students || 0).toLocaleString("en-IN") + " students</span>" + (c.lessons ? "<span class=\"cc-pill\">" + (c.lessons || 0) + " lessons</span>" : "") + (c.duration ? "<span class=\"cc-pill\">" + esc(c.duration) + "</span>" : "") + "</div>"
+      + "<div class=\"course-foot\">" + priceHTML(c)
+      + "<span class=\"details-link\">" + (owned ? "Open course" : "Details") + " \u25b8</span></div></div>";
+    card.addEventListener("click", function(){ openDetail(c.id); });
+    attachTilt(card, 5);
+    g.appendChild(card);
+  });
+  $("statCourses").textContent = state.courses.length;
+}
+
+/* tilt (kept) + hero float is pure CSS */
+function attachTilt(el, max){
+  el.addEventListener("mousemove", function(e){
+    var r = el.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+    el.style.transform = "perspective(900px) rotateY(" + (x * max) + "deg) rotateX(" + (-y * max) + "deg) translateY(-3px)";
+  });
+  el.addEventListener("mouseleave", function(){ el.style.transform = ""; });
+}
+attachTilt($("heroCard"), 9);
+
+/* ================= modals ================= */
+function openModal(id){ $(id).classList.add("open"); swoosh(); }
+function closeModal(id){ $(id).classList.remove("open"); blip(420); }
+document.querySelectorAll("[data-close]").forEach(function(b){
+  b.addEventListener("click", function(){ b.closest(".modal-back").classList.remove("open"); });
+});
+document.querySelectorAll(".modal-back").forEach(function(m){
+  m.addEventListener("click", function(e){ if(e.target === m) m.classList.remove("open"); });
+});
+function approvedOrder(courseId){
+  return state.orders.filter(function(o){ return o.courseId === courseId && o.status === "Approved"; })[0];
+}
+function isOwned(id){ return !!(PURCHASED[id] || (MODE === "local" && approvedOrder(id))); }
+function openDetail(id){
+  var c = state.courses.filter(function(x){ return x.id === id; })[0]; if(!c) return;
+  detailCourseId = id;
+  $("cmCover").innerHTML = coverHTML(c);
+  $("cmCat").textContent = c.cat;
+  $("cmTitle").textContent = c.title;
+  $("cmMeta").innerHTML = metaHTML(c);
+  $("cmDesc").textContent = c.desc;
+  $("cmPrice").innerHTML = "<div class=\"m-price\">" + (c.price ? inr(c.price) : "Free") + (c.oldPrice && c.oldPrice > c.price ? " <s>" + inr(c.oldPrice) + "</s>" : "") + "</div><p class=\"m-trust\">Lifetime access \u00b7 Certificate included \u00b7 Pay once, learn forever</p>";
+  var ord = PURCHASED[id] || ((MODE === "local") ? approvedOrder(id) : null), acc = $("cmAccess");
+  if(ord){
+    var drv = (ord.drive || ord.driveUrl) || "";
+    var tg = (ord.telegram || ord.telegramChannel) || "";
+    acc.innerHTML = "<p class=\"owned-note\">You already own this course</p>" + (drv ? "<a class=\"btn btn-orange btn-block\" href=\"" + esc(drv) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Open Course Material</a> " : "")
+      + (tg ? "<a class=\"btn btn-orange\" href=\"" + esc(tg) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Join Telegram Channel</a>" : "")
+      + ((!drv && !tg) ? "<p class=\"hint\" style=\"font-weight:700;color:var(--green)\">Your access is approved. The seller will share the course material on your contact shortly.</p>" : "");
+    $("cmEnroll").textContent = "Purchased — Open My Course";
+  } else { acc.innerHTML = ""; $("cmEnroll").textContent = c.price ? "Buy this course" : "Get this course, Free"; }
+  openModal("courseModal");
+}
+$("cmEnroll").addEventListener("click", function(){
+  if(isOwned(detailCourseId)){ closeModal("courseModal"); showView("mine"); return; }
+  closeModal("courseModal"); openCheckout(detailCourseId);
+});
+function openCheckout(id){
+  var c = state.courses.filter(function(x){ return x.id === id; })[0]; if(!c) return;
+  if(isOwned(id)){ toast("You already bought this course — no need to buy again."); return; }
+  if(!USER){ authAfter = function(){ openCheckout(id); }; openAuth("login"); toast("Please login first to place an order."); return; }
+  checkoutCourseId = id;
+  $("coTitle").textContent = c.title;
+  $("coPrice").innerHTML = priceHTML(c);
+  $("coErr").style.display = "none"; $("coOk").style.display = "none";
+  $("coForm").reset();
+  $("coName").value = USER.name || "";
+  $("coContact").value = USER.contact || "";
+  $("coContact").readOnly = true;
+  openModal("checkoutModal");
+}
+$("coForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var name = $("coName").value.trim(), contact = $("coContact").value.trim(), mail = $("coMail").value.trim();
+  var err = $("coErr");
+  if(name.length < 2 || contact.length < 5){
+    err.textContent = "Please enter your name and a valid mobile number or Telegram username."; err.style.display = "block"; return;
+  }
+  err.style.display = "none";
+  var c = state.courses.filter(function(x){ return x.id === checkoutCourseId; })[0];
+  if(!c) return;
+  var ok = $("coOk");
+  if(MODE === "live"){
+    var r = await api("order", {method: "POST", token: USER_TOKEN, body: JSON.stringify({courseId: c.id, name: name})});
+    if(!r || !r.ok){
+      err.textContent = "Order failed: " + ((r && r.error) || "please try again."); err.style.display = "block"; return;
+    }
+    ok.innerHTML = (r.order && r.order.status === "approved")
+      ? "Done! This course is free — your access is approved instantly. Open the course again to get the material link."
+      : "Order placed! The seller will contact you on " + esc(contact) + " to confirm payment. Once approved, your course access opens here.";
+    ok.style.display = "block";
+    chime(); toast(r.order && r.order.status === "approved" ? "Free course unlocked!" : "Order placed successfully.");
+  } else {
+    var order = {id: uid(), code: "ORD-" + (1000 + (DATA.orders || []).length + 1), courseId: c.id, courseTitle: c.title, name: name, contact: USER.contact, email: mail, userId: USER.id,
+      amount: c.price, status: c.price ? "pending" : "approved", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString()};
+    var raw = RAW.filter(function(x){ return String(x.id) === String(c.id); })[0];
+    if(raw){ order.driveUrl = raw.driveUrl || ""; order.telegramChannel = raw.telegramChannel || ""; }
+    DATA.orders = DATA.orders || []; DATA.orders.unshift(order); localSave();
+    state.orders = DATA.orders.map(normOrder);
+    ok.innerHTML = c.price
+      ? "Order placed! The seller will contact you on " + esc(contact) + " to confirm payment. Once approved, your course access opens here."
+      : "Done! This course is free — your access is approved instantly. Open the course again to get the material link.";
+    ok.style.display = "block";
+    chime(); toast(c.price ? "Order placed successfully." : "Free course unlocked!");
+    renderStats();
+  }
+  myOrdersCache = null; loadMyCourses(); loadMyOrders(state.myOrderFilter || "all");
+});
+
+/* ================= My Courses — login only, private to the account ================= */
+async function loadMyCourses(){
+  var prompt = $("mineLoginPrompt"), content = $("mineContent"), out = $("myOrdersOut");
+  if(!USER){ if(prompt) prompt.style.display = "block"; if(content) content.style.display = "none"; if(out) out.innerHTML = ""; return; }
+  if(prompt) prompt.style.display = "none"; if(content) content.style.display = "block";
+  var list = [];
+  if(MODE === "live"){
+    var r = await api("order", {token: USER_TOKEN});
+    if(!r || !r.ok){ if(out) out.innerHTML = "<p class=\"hint\">Could not load your courses. Please login again.</p>"; return; }
+    list = r.orders || [];
+  } else {
+    list = (DATA.orders || []).filter(function(o){ return String(o.userId) === String(USER.id); }).map(function(o){
+      return {id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.driveUrl || "", telegramChannel: o.telegramChannel || ""};
+    });
+  }
+  myOrdersCache = list;
+  list.forEach(function(o){ if(String(o.status || "").toLowerCase() === "approved"){ PURCHASED[o.courseId] = o; } });
+  renderCourses();
+  if(!list.length){ out.innerHTML = "<div class=\"empty-box\"><h3>No courses yet</h3><p>You have not bought any course yet. Browse the catalog and place your first order.</p></div>"; return; }
+  var ownedList = list.filter(function(o){ return String(o.status || "").toLowerCase() === "approved"; });
+  var restList = list.filter(function(o){ return String(o.status || "").toLowerCase() !== "approved"; });
+  function orderCard(o, isOwnedCard){
+    var st = String(o.status || "pending").toLowerCase();
+    var label = st.charAt(0).toUpperCase() + st.slice(1);
+    var cls = st === "approved" ? "appr" : ((st === "rejected" || st === "cancelled") ? "canc" : "pend");
+    var cc = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0];
+    var amt = (o.amount != null && o.amount !== "") ? Number(o.amount) : (cc ? Number(cc.price) || 0 : 0);
+    var h = "<div class=\"mine-card" + (isOwnedCard ? " owned" : "") + "\">";
+    if(isOwnedCard){
+      h += "<div class=\"mine-cover\">" + (cc ? artSVG({id: String(o.courseId), title: o.courseTitle || "", cat: cc.category || ""}) : "") + "<span class=\"owned-badge\">OWNED</span></div>";
+    }
+    h += "<div class=\"mine-body\"><div class=\"mine-head\"><b>" + esc(o.courseTitle || "") + "</b> <span class=\"pill " + cls + "\">" + (isOwnedCard ? "OWNED" : label.toUpperCase()) + "</span></div>";
+    h += "<span class=\"hint\">" + esc(o.code || "") + " \u00b7 " + (amt ? inr(amt) : "Free") + (o.createdAt ? " \u00b7 " + esc(new Date(o.createdAt).toLocaleDateString("en-IN")) : "") + "</span>";
+    if(st === "approved"){
+      var drv = o.driveUrl || o.drive || "", tg = o.telegramChannel || o.telegram || "";
+      if(drv) h += "<a class=\"btn btn-orange btn-block\" href=\"" + esc(drv) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Open course on Drive</a>";
+      if(tg) h += "<a class=\"btn btn-white btn-block\" href=\"" + esc(tg) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Join course on Telegram</a>";
+      if(!drv && !tg) h += "<span class=\"hint\">Approved \u2014 course material will be shared on your contact.</span>";
+    } else if(st === "pending") h += "<span class=\"hint\">Waiting for seller approval after payment confirmation.</span>";
+    else if(st === "cancelled") h += "<span class=\"hint\">This order was cancelled. Contact the seller on Telegram if this is a mistake.</span>";
+    else h += "<span class=\"hint\">This order was rejected. Contact the seller on Telegram if this is a mistake.</span>";
+    return h + "</div></div>";
+  }
+  out.innerHTML = "<div class=\"mine-grid\">" + ownedList.map(function(o){ return orderCard(o, true); }).join("") + "</div>"
+    + (restList.length ? "<div class=\"mine-rest\">" + restList.map(function(o){ return orderCard(o, false); }).join("") + "</div>" : "");
+}
+function myOrders(){ return loadMyCourses(); }
+async function loadMyOrders(filter){
+  state.myOrderFilter = filter || state.myOrderFilter || "all";
+  var prompt = $("ordersLoginPrompt"), content = $("ordersContent"), listEl = $("myOrdersList");
+  if(!USER){ if(prompt) prompt.style.display = "block"; if(content) content.style.display = "none"; return; }
+  if(prompt) prompt.style.display = "none"; if(content) content.style.display = "block";
+  if(!myOrdersCache){ await loadMyCourses(); }
+  var list = myOrdersCache || [];
+  document.querySelectorAll("#myOrderTabs .tab").forEach(function(t2){ t2.classList.toggle("active", t2.getAttribute("data-otab") === state.myOrderFilter); });
+  var f = state.myOrderFilter;
+  var shown = list.filter(function(o){
+    var st = String(o.status || "").toLowerCase();
+    if(f === "all") return true;
+    if(f === "cancelled") return st === "cancelled" || st === "rejected";
+    return st === f;
+  });
+  if(!shown.length){ listEl.innerHTML = "<div class=\"empty-box\"><p>No " + (f === "all" ? "orders" : f) + " orders yet.</p></div>"; return; }
+  listEl.innerHTML = shown.map(function(o){
+    var st = String(o.status || "pending").toLowerCase();
+    var label = st.charAt(0).toUpperCase() + st.slice(1);
+    var cls = st === "approved" ? "appr" : ((st === "rejected" || st === "cancelled") ? "canc" : "pend");
+    var cc = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0];
+    var amt = (o.amount != null && o.amount !== "") ? Number(o.amount) : (cc ? Number(cc.price) || 0 : 0);
+    return "<div class=\"mine-order\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:flex-start\"><b>" + esc(o.courseTitle || "") + "</b><span class=\"pill " + cls + "\">" + label.toUpperCase() + "</span></div>"
+      + "<div class=\"hint\">" + esc(o.code || "") + " \u00b7 " + (amt ? inr(amt) : "Free") + (o.createdAt ? " \u00b7 " + esc(new Date(o.createdAt).toLocaleDateString("en-IN")) : "") + "</div></div>";
+  }).join("");
+}
+
+/* ================= views, drawer, bottom nav ================= */
+var currentView = "home";
+function showView(name){
+  currentView = name;
+  var home = (name === "home" || name === "catalog");
+  var show = function(id, on){ var el = document.getElementById(id); if(el){ el.style.display = on ? "" : "none"; if(on) el.classList.add("in"); } };
+  show("my-courses", name === "mine");
+  show("my-orders", name === "orders");
+  document.querySelectorAll(".hero, #categories, #catalog, #how-it-works, #community").forEach(function(el){ el.style.display = home ? "" : "none"; if(home) el.classList.add("in"); });
+  if(name === "mine") loadMyCourses();
+  if(name === "orders") loadMyOrders(state.myOrderFilter || "all");
+  if(name === "catalog"){ var cg = document.getElementById("catalog"); if(cg) setTimeout(function(){ cg.scrollIntoView({behavior: "smooth"}); }, 60); }
+  document.querySelectorAll(".bn-item").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-view") === name || (name === "catalog" && b.getAttribute("data-view") === "catalog")); });
+  closeDrawer();
+  window.scrollTo(0, 0);
+}
+function openDrawer(){ $("drawer").classList.add("open"); $("drawerBack").classList.add("open"); }
+function closeDrawer(){ var d = $("drawer"); if(d) d.classList.remove("open"); var b = $("drawerBack"); if(b) b.classList.remove("open"); }
+document.addEventListener("click", function(e){
+  var v = e.target.closest ? e.target.closest("[data-view]") : null;
+  if(v){ e.preventDefault(); var name = v.getAttribute("data-view"); if(name === "menu"){ openDrawer(); return; } showView(name); }
+});
+document.addEventListener("click", function(e){
+  var a = e.target.closest ? e.target.closest("[data-auth-open]") : null;
+  if(a){ e.preventDefault(); openAuth("login"); }
+});
+
+/* ================= login / signup ================= */
+var authMode = "login";
+function renderAuthUI(){
+  var dn = $("drawerName"); if(dn) dn.textContent = USER ? USER.name : "Guest";
+  var ds = $("drawerSub"); if(ds) ds.textContent = USER ? USER.contact : "Login to see your courses";
+  var da = $("drawerAvatar"); if(da) da.textContent = USER ? (USER.name || "U").charAt(0).toUpperCase() : "G";
+  var ab = $("drawerAuthBtn"); if(ab) ab.style.display = USER ? "none" : "";
+  var lb = $("drawerLogoutBtn"); if(lb) lb.style.display = USER ? "" : "none";
+}
+function setUser(token, user){
+  USER_TOKEN = token; USER = user;
+  try{ localStorage.setItem("iskill_user_token", token); localStorage.setItem("iskill_user", JSON.stringify(user)); }catch(e){}
+}
+function openAuth(mode){
+  authMode = mode || "login";
+  $("authTitle").textContent = authMode === "signup" ? "Create your account" : "Login";
+  $("authSub").textContent = authMode === "signup" ? "Create a free account — your courses and orders stay private to you." : "Login to see your courses and orders — only you can see them.";
+  $("authNameWrap").style.display = authMode === "signup" ? "block" : "none";
+  $("authTabLogin").classList.toggle("active", authMode === "login");
+  $("authTabSignup").classList.toggle("active", authMode === "signup");
+  $("authSubmit").textContent = authMode === "signup" ? "Create account" : "Login";
+  $("authErr").style.display = "none"; $("authOk").style.display = "none";
+  openModal("authModal");
+}
+function logoutUserSilent(){
+  USER_TOKEN = ""; USER = null; PURCHASED = {};
+  try{ localStorage.removeItem("iskill_user_token"); localStorage.removeItem("iskill_user"); }catch(e){}
+  renderAuthUI();
+}
+function logoutUser(){
+  logoutUserSilent(); myOrdersCache = null;
+  renderCourses(); loadMyCourses(); loadMyOrders("all");
+  showView("home"); toast("Logged out.");
+}
+async function authMe(){
+  if(!USER_TOKEN) return;
+  if(MODE === "live"){
+    var r = await api("auth?action=me", {token: USER_TOKEN});
+    if(!r || !r.ok){ logoutUserSilent(); return; }
+    USER = r.user;
+    try{ localStorage.setItem("iskill_user", JSON.stringify(USER)); }catch(e){}
+  }
+  renderAuthUI();
+}
+
+/* ================= header controls ================= */
+$("themeBtn").addEventListener("click", function(){
+  var b = document.body;
+  b.setAttribute("data-theme", b.getAttribute("data-theme") === "dark" ? "light" : "dark");
+});
+$("soundBtn").addEventListener("click", function(){
+  soundOn = !soundOn; this.classList.toggle("off", !soundOn);
+  if(soundOn) blip(700);
+  toast(soundOn ? "Click sound ON" : "Click sound OFF");
+});
+$("searchInput").addEventListener("input", renderCourses);
+
+
+$("menuBtn").addEventListener("click", openDrawer);
+$("drawerClose").addEventListener("click", closeDrawer);
+$("drawerBack").addEventListener("click", closeDrawer);
+$("drawerAuthBtn").addEventListener("click", function(){ closeDrawer(); openAuth("login"); });
+$("drawerLogoutBtn").addEventListener("click", function(){ closeDrawer(); logoutUser(); });
+var _mlb = $("mineLoginBtn"); if(_mlb) _mlb.addEventListener("click", function(){ openAuth("login"); });
+$("authTabLogin").addEventListener("click", function(){ openAuth("login"); });
+$("authTabSignup").addEventListener("click", function(){ openAuth("signup"); });
+document.querySelectorAll("#myOrderTabs .tab").forEach(function(t2){ t2.addEventListener("click", function(){ loadMyOrders(t2.getAttribute("data-otab")); }); });
+$("authForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var err = $("authErr");
+  var contact = $("authContact").value.trim(), pass = $("authPass").value;
+  var name = $("authName").value.trim();
+  err.style.display = "none";
+  function fail(m){ err.textContent = m; err.style.display = "block"; blip(180); }
+  if(authMode === "signup" && name.length < 2) return fail("Please enter your name.");
+  if(!contact || contact.length < 5) return fail("Enter a valid mobile number or email.");
+  if(pass.length < 4 || pass.length > 12) return fail("Password must be 4–12 characters.");
+  if(MODE === "live"){
+    var r = await api("auth", {method: "POST", token: null, body: JSON.stringify({action: authMode, name: name, contact: contact, password: pass})});
+    if(!r || !r.ok) return fail((r && r.error) || "Login failed. Try again.");
+    setUser(r.token, r.user);
+    if(r.linkedOrders) toast(r.linkedOrders + " old order" + (r.linkedOrders > 1 ? "s" : "") + " linked to your account.");
+  } else {
+    var nc = normContact(contact);
+    DATA.users = DATA.users || [];
+    if(authMode === "signup"){
+      if(DATA.users.filter(function(u){ return normContact(u.contact) === nc; }).length) return fail("An account already exists with this contact. Try logging in.");
+      var u = {id: uid(), name: name, contact: nc, passHash: await sha256("iskill-user:" + nc + ":" + pass), createdAt: new Date().toISOString()};
+      DATA.users.push(u);
+      var linked = 0;
+      (DATA.orders || []).forEach(function(o){ if(!o.userId && (normContact(o.contact) === nc || (o.email || "").toLowerCase() === nc)){ o.userId = u.id; linked++; } });
+      localSave();
+      setUser("local-user-" + u.id, {id: u.id, name: u.name, contact: u.contact});
+      if(linked) toast(linked + " old order" + (linked > 1 ? "s" : "") + " linked to your account.");
+    } else {
+      var u2 = DATA.users.filter(function(x){ return normContact(x.contact) === nc; })[0];
+      var h = await sha256("iskill-user:" + nc + ":" + pass);
+      if(!u2 || u2.passHash !== h) return fail("Wrong login details. Try again.");
+      setUser("local-user-" + u2.id, {id: u2.id, name: u2.name, contact: u2.contact});
+    }
+  }
+  closeModal("authModal"); chime();
+  toast(authMode === "signup" ? "Account created — welcome, " + (USER && USER.name ? USER.name : "") + "!" : "Logged in. Welcome back!");
+  renderAuthUI(); loadMyCourses(); loadMyOrders("all");
+  if(authAfter){ var f = authAfter; authAfter = null; f(); }
+});
+
+/* ================= admin routing ================= */
+function isAdminRoute(){
+  return /\/admin\/?$/.test(location.pathname) || /[?&#]admin\b/.test(location.search + location.hash);
+}
+function enterAdmin(){
+  document.body.classList.add("admin-mode");
+  window.scrollTo(0, 0);
+  showPinGate();
+}
+function exitAdmin(){
+  document.body.classList.remove("admin-mode");
+  adminAuthed = false;
+  try{ history.replaceState(null, "", location.pathname.replace(/\/admin\/?$/, "/") || "/"); }catch(e){}
+  window.scrollTo(0, 0);
+  loadCatalog();
+}
+window.addEventListener("hashchange", function(){ if(isAdminRoute()) enterAdmin(); });
+$("exitAdminBtn").addEventListener("click", exitAdmin);
+$("pinBack").addEventListener("click", exitAdmin);
+
+async function showPinGate(){
+  $("pinGate").style.display = "block";
+  $("adminPanel").style.display = "none";
+  $("pinErr").style.display = "none";
+  if(PIN_SET === null) await refreshPinStatus();
+  if(PIN_SET){
+    $("pinTitle").textContent = "Admin Access";
+    $("pinText").textContent = "Enter your admin PIN to open the panel.";
+    $("pinBtn").textContent = "Unlock Panel";
+  } else {
+    $("pinTitle").textContent = "Create your Admin PIN";
+    $("pinText").textContent = "This is your first visit. Create a PIN (4–12 characters) — only someone with this PIN can open the admin panel at /admin.";
+    $("pinBtn").textContent = "Create PIN & Open Panel";
+  }
+  $("pinInput").value = "";
+  setTimeout(function(){ $("pinInput").focus(); }, 60);
+}
+async function tryPin(){
+  var v = $("pinInput").value.trim(), err = $("pinErr");
+  if(!PIN_SET){
+    if(v.length < 4 || v.length > 12){
+      err.textContent = "PIN must be 4–12 characters."; err.style.display = "block"; return;
+    }
+    if(MODE === "live"){
+      var r = await api("admin", {method: "POST", body: JSON.stringify({action: "setPin", pin: v})});
+      if(!r || !r.ok){ err.textContent = (r && r.error) || "Could not save PIN."; err.style.display = "block"; return; }
+    } else {
+      DATA.admin = DATA.admin || {};
+      DATA.admin.pinHash = await sha256("iskill-pin:" + v); localSave();
+    }
+    PIN_SET = true;
+    toast("Admin PIN created. Now enter it to open the panel.");
+    showPinGate();
+    return;
+  }
+  if(MODE === "live"){
+    var r2 = await api("admin", {method: "POST", body: JSON.stringify({action: "verifyPin", pin: v})});
+    if(!r2 || !r2.ok){ err.textContent = "Wrong PIN. Try again."; err.style.display = "block"; blip(180); return; }
+    TOKEN = r2.token || "";
+    try{ localStorage.setItem("iskill_token", TOKEN); }catch(e){}
+  } else {
+    if((await sha256("iskill-pin:" + v)) !== (DATA.admin && DATA.admin.pinHash)){
+      err.textContent = "Wrong PIN. Try again."; err.style.display = "block"; blip(180); return;
+    }
+    TOKEN = "local-token";
+    try{ localStorage.setItem("iskill_token", TOKEN); }catch(e){}
+  }
+  unlockAdmin();
+}
+$("pinBtn").addEventListener("click", tryPin);
+$("pinInput").addEventListener("keydown", function(e){ if(e.key === "Enter") tryPin(); });
+async function unlockAdmin(){
+  adminAuthed = true;
+  $("pinGate").style.display = "none";
+  $("adminPanel").style.display = "block";
+  fillCatSelects(); renderStats(); renderMine(); renderOrders();
+  await refreshAdminData();
+}
+$("changePinBtn").addEventListener("click", function(){ showTab("settings"); });
+$("lockBtn").addEventListener("click", async function(){
+  if(MODE === "live"){ await api("admin", {method: "POST", body: JSON.stringify({action: "lock"})}); }
+  TOKEN = "";
+  try{ localStorage.removeItem("iskill_token"); }catch(e){}
+  adminAuthed = false;
+  toast("Admin panel locked.");
+  showPinGate();
+});
+
+/* tabs */
+document.querySelectorAll(".tab").forEach(function(t){
+  t.addEventListener("click", function(){
+    document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
+    t.classList.add("active");
+    document.querySelectorAll("[data-panel]").forEach(function(p){
+      p.style.display = p.getAttribute("data-panel") === t.getAttribute("data-tab") ? "block" : "none";
+    });
+  });
+});
+function showTab(name){
+  document.querySelectorAll(".tab").forEach(function(x){ x.classList.toggle("active", x.getAttribute("data-tab") === name); });
+  document.querySelectorAll("[data-panel]").forEach(function(p){
+    p.style.display = p.getAttribute("data-panel") === name ? "block" : "none";
+  });
+}
+
+/* ================= admin: forms ================= */
+function fillCatSelects(){
+  var opts = state.categories.map(function(c){ return "<option>" + esc(c) + "</option>"; }).join("");
+  $("fCat").innerHTML = opts + "<option value=\"__new\">+ Add new category…</option>";
+  $("dCat").innerHTML = opts;
+}
+$("fCat").addEventListener("change", function(){
+  $("newCatWrap").style.display = this.value === "__new" ? "block" : "none";
+});
+
+/* image upload — downscaled to max 800px JPEG so the server accepts it */
+$("fImgFile").addEventListener("change", function(){
+  var f = this.files[0]; if(!f) return;
+  if(f.size > 2.5 * 1024 * 1024){ toast("Image is large — under 2.5 MB works best.", true); }
+  var r = new FileReader();
+  r.onload = function(){
+    var img = new Image();
+    img.onload = function(){
+      var s = Math.min(1, 800 / img.width);
+      var cv = document.createElement("canvas");
+      cv.width = Math.max(1, Math.round(img.width * s)); cv.height = Math.max(1, Math.round(img.height * s));
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      var dataUrl = cv.toDataURL("image/jpeg", .82);
+      state.uploadedImg = dataUrl;
+      var p = $("imgPreview"); p.src = dataUrl; p.style.display = "block";
+      $("fImgUrl").value = "";
+    };
+    img.onerror = function(){
+      state.uploadedImg = r.result;
+      var p2 = $("imgPreview"); p2.src = r.result; p2.style.display = "block";
+      $("fImgUrl").value = "";
+    };
+    img.src = r.result;
+  };
+  r.readAsDataURL(f);
+});
+$("fImgUrl").addEventListener("input", function(){
+  if(this.value.trim()){
+    state.uploadedImg = "";
+    var p = $("imgPreview"); p.src = this.value.trim(); p.style.display = "block";
+  }
+});
+function currentCover(){
+  if(state.uploadedImg) return state.uploadedImg;
+  var u = $("fImgUrl").value.trim(); if(u) return u;
+  var p = $("imgPreview"); return (p.style.display !== "none" && p.src && p.src.indexOf("data:") === 0) ? p.src : "";
+}
+function resetAddForm(){
+  $("addForm").reset(); $("fEditId").value = ""; state.editingId = null; state.uploadedImg = "";
+  $("imgPreview").style.display = "none"; $("newCatWrap").style.display = "none";
+  $("addTitle").textContent = "Add a new course"; $("addSubmit").textContent = "Publish Course";
+  $("addErr").style.display = "none"; $("addOk").style.display = "none";
+}
+$("addReset").addEventListener("click", resetAddForm);
+
+$("addForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var err = $("addErr"), ok = $("addOk");
+  var title = $("fTitle").value.trim();
+  var cat = $("fCat").value;
+  if(cat === "__new"){ cat = $("fNewCat").value.trim(); }
+  var priceRaw = $("fPrice").value, price = priceRaw === "" ? NaN : Number(priceRaw);
+  var oldPrice = $("fOldPrice").value === "" ? 0 : Number($("fOldPrice").value);
+  var desc = $("fDesc").value.trim();
+  var drive = $("fDrive").value.trim();
+  var lessons = $("fLessons").value === "" ? 0 : Number($("fLessons").value);
+  function fail(m){ err.textContent = m; err.style.display = "block"; ok.style.display = "none"; blip(180); }
+  if(title.length < 3) return fail("Please enter a course title (at least 3 characters).");
+  if(!cat) return fail("Please choose a category, or type a new category name.");
+  if(isNaN(price) || price < 0) return fail("Please enter a valid price. Use 0 for a FREE course.");
+  if(desc.length < 10) return fail("Please write a short description (at least 10 characters).");
+  if(drive && drive.indexOf("drive.google.com") === -1 && drive.indexOf("docs.google.com") === -1)
+    return fail("The Drive link does not look like a Google Drive link. Check it, or leave the field blank.");
+  err.style.display = "none";
+  if(state.categories.indexOf(cat) === -1){ state.categories.push(cat); fillCatSelects(); }
+  var cover = currentCover();
+  var oldRaw = state.editingId ? RAW.filter(function(x){ return String(x.id) === String(state.editingId); })[0] : null;
+  var data = {
+    title: title, category: cat, price: price, oldPrice: oldPrice,
+    rating: oldRaw ? oldRaw.rating : 4.6, students: oldRaw ? oldRaw.students : 0,
+    duration: oldRaw ? oldRaw.duration : "10 hours", lessons: lessons, level: $("fLevel").value,
+    description: desc,
+    includes: oldRaw ? oldRaw.includes : ["Complete video course — lifetime access", "Delivered on Google Drive", "Downloadable resources", "Certificate of completion", "Support on Telegram", "Free updates"],
+    driveUrl: drive, telegramChannel: $("fTelegram").value.trim(), cover: cover
+  };
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify(state.editingId ? {action: "updateCourse", id: state.editingId, course: data} : {action: "createCourse", course: data})});
+    if(!r || !r.ok) return fail("Save failed: " + ((r && r.error) || "please try again."));
+    ok.textContent = state.editingId
+      ? "Course updated: “" + title + "” is live on the store."
+      : "Course published: “" + title + "” is now live on the store.";
+  } else {
+    if(state.editingId){
+      var i = DATA.courses.findIndex(function(x){ return String(x.id) === String(state.editingId); });
+      if(i > -1){ data.id = DATA.courses[i].id; data.createdAt = DATA.courses[i].createdAt; data.free = data.price === 0; DATA.courses[i] = data; }
+    } else {
+      data.id = "crs-" + Date.now(); data.createdAt = new Date().toISOString(); data.free = data.price === 0;
+      DATA.courses.unshift(data);
+    }
+    if(DATA.categories.indexOf(data.category) === -1) DATA.categories.push(data.category);
+    localSave(); RAW = DATA.courses; applyServerData(DATA.courses, DATA.categories);
+    state.orders = (DATA.orders || []).map(normOrder);
+    ok.textContent = "Course saved (demo mode — this device only).";
+  }
+  ok.style.display = "block";
+  var msg = ok.textContent;
+  resetAddForm();
+  ok.textContent = msg; ok.style.display = "block";
+  await refreshAdminData();
+  toast("Saved — live on the store now.");
+});
+
+/* drive import */
+function driveId(link){
+  var m = link.match(/\/d\/([a-zA-Z0-9_-]{10,})/) || link.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+  return m ? m[1] : null;
+}
+$("drvForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var err = $("drvErr"), ok = $("drvOk");
+  var link = $("dLink").value.trim(), title = $("dTitle").value.trim();
+  function fail(m){ err.textContent = m; err.style.display = "block"; ok.style.display = "none"; blip(180); }
+  if(link.indexOf("drive.google.com") === -1 && link.indexOf("docs.google.com") === -1)
+    return fail("Please paste a valid Google Drive link.");
+  if(title.length < 3) return fail("Please enter a course title.");
+  err.style.display = "none";
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "driveImport", driveUrl: link, title: title, category: $("dCat").value, price: $("dPrice").value === "" ? 0 : Number($("dPrice").value)})});
+    if(!r || !r.ok) return fail("Import failed: " + ((r && r.error) || "please try again."));
+    ok.textContent = "Imported: “" + title + "” is now live on the store.";
+  } else {
+    var id = driveId(link);
+    var cover = $("dImgUrl").value.trim() || (id ? "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000" : "");
+    var c = {id: "crs-" + Date.now(), title: title, category: $("dCat").value,
+      price: $("dPrice").value === "" ? 0 : Number($("dPrice").value), oldPrice: 0,
+      rating: 4.6, students: 0, duration: "Full course", lessons: 50, level: "All Levels",
+      description: "Imported from Google Drive. Edit this course in “My Courses” to add a full description, lessons and pricing details.",
+      includes: ["Complete video course — lifetime access", "Delivered on Google Drive", "Downloadable resources", "Support on Telegram", "Free updates", "Certificate of completion"],
+      driveUrl: link, telegramChannel: "", cover: cover, coverKind: cover ? "image" : "gradient", free: false, createdAt: new Date().toISOString()};
+    if(c.price === 0) c.free = true;
+    DATA.courses.unshift(c);
+    if(DATA.categories.indexOf(c.category) === -1) DATA.categories.push(c.category);
+    localSave(); RAW = DATA.courses; applyServerData(DATA.courses, DATA.categories);
+    state.orders = (DATA.orders || []).map(normOrder);
+    ok.textContent = "Imported: “" + title + "” is now live on the store." + (id ? "" : " (Folder link — no auto thumbnail, add a cover from My Courses → Edit.)");
+  }
+  ok.style.display = "block";
+  $("drvForm").reset();
+  await refreshAdminData();
+  toast("Course imported from Drive.");
+});
+
+/* my courses (admin) */
+function renderMine(){
+  var tb = $("mineBody"); tb.innerHTML = "";
+  var q = ($("mineSearch") && $("mineSearch").value || "").toLowerCase();
+  var list = state.courses.filter(function(c){ return !q || (c.title || "").toLowerCase().indexOf(q) > -1; });
+  if(!list.length){ tb.innerHTML = "<tr><td colspan=\"5\">No courses match. Add your first course from the “Add Course” tab.</td></tr>"; return; }
+  var heroId = (DATA && DATA.settings && DATA.settings.featuredCourseId) || "";
+  list.forEach(function(c){
+    var isHero = String(c.id) === String(heroId);
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td><b>" + esc(c.title) + "</b>" + (isHero ? " <span class=\"hero-badge\" style=\"background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;vertical-align:middle\">★ HERO</span>" : "") + "</td><td>" + esc(c.cat) + "</td><td>" + (c.price ? inr(c.price) : "<b style=\"color:var(--green)\">FREE</b>") + "</td>"
+      + "<td>" + (c.drive ? "<a href=\"" + esc(c.drive) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Open ↗</a>" : "<span style=\"color:var(--red);font-weight:800\">Missing</span>") + "</td>"
+      + "<td><div class=\"row-actions\"><button class=\"btn btn-sm\" data-act=\"hero\" data-sound" + (isHero ? " disabled style=\"opacity:.55;cursor:default\"" : "") + ">" + (isHero ? "Hero me hai" : "Make Hero") + "</button><button class=\"btn btn-sm\" data-act=\"edit\" data-sound>Edit</button><button class=\"btn btn-sm btn-danger\" data-act=\"del\" data-sound>Remove</button></div></td>";
+    tr.querySelector("[data-act=\"edit\"]").addEventListener("click", function(){ editCourse(c.id); });
+    tr.querySelector("[data-act=\"del\"]").addEventListener("click", function(){ removeCourse(c.id); });
+    if(!isHero) tr.querySelector("[data-act=\"hero\"]").addEventListener("click", function(){ makeHero(c.id); });
+    tb.appendChild(tr);
+  });
+}
+async function makeHero(id){
+  var c = state.courses.filter(function(x){ return String(x.id) === String(id); })[0]; if(!c) return;
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "saveSettings", settings: {featuredCourseId: id}})});
+    if(!r || !r.ok){ toast("Hero change failed: " + ((r && r.error) || "try again."), true); return; }
+  } else { DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = id; localSave(); }
+  DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = id;
+  setHeroCover(); fillFeaturedSelect(); renderMine();
+  toast("Hero course changed to \u201c" + c.title + "\u201d.");
+}
+function editCourse(id){
+  var c = state.courses.filter(function(x){ return x.id === id; })[0]; if(!c) return;
+  resetAddForm();
+  state.editingId = id; $("fEditId").value = id;
+  $("fTitle").value = c.title; $("fCat").value = c.cat;
+  $("fPrice").value = c.price; $("fOldPrice").value = c.oldPrice || "";
+  $("fLevel").value = c.level || "Beginner"; $("fLessons").value = c.lessons || "";
+  $("fDesc").value = c.desc; $("fDrive").value = c.drive || "";
+  var ft = $("fTelegram"); if(ft) ft.value = c.telegram || "";
+  if(c.cover){ var p = $("imgPreview"); p.src = c.cover; p.style.display = "block"; if(c.cover.indexOf("http") === 0) $("fImgUrl").value = c.cover; }
+  $("addTitle").textContent = "Edit course"; $("addSubmit").textContent = "Save Changes";
+  showTab("add"); window.scrollTo(0, 0);
+}
+var pendingDeleteId = null;
+async function removeCourse(id){
+  var c = state.courses.filter(function(x){ return x.id === id; })[0]; if(!c) return;
+  if(pendingDeleteId !== id){
+    pendingDeleteId = id;
+    toast("Tap Remove again to confirm deleting “" + c.title + "”.", true);
+    setTimeout(function(){ if(pendingDeleteId === id) pendingDeleteId = null; }, 4000);
+    return;
+  }
+  pendingDeleteId = null;
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "deleteCourse", id: id})});
+    if(!r || !r.ok){ toast("Delete failed: " + ((r && r.error) || "please try again."), true); return; }
+  } else {
+    DATA.courses = DATA.courses.filter(function(x){ return String(x.id) !== String(id); });
+    DATA.orders = (DATA.orders || []).filter(function(o){ return String(o.courseId) !== String(id); });
+    localSave(); RAW = DATA.courses; state.orders = DATA.orders.map(normOrder);
+    applyServerData(DATA.courses, DATA.categories);
+  }
+  if(state.editingId === id) resetAddForm();
+  await refreshAdminData();
+  toast("Course removed: “" + c.title + "”");
+}
+
+/* orders */
+function renderOrders(){
+  var tb = $("ordersBody"); tb.innerHTML = "";
+  var f = ($("orderFilter") && $("orderFilter").value) || "All";
+  var list = state.orders.filter(function(o){ return f === "All" || o.status === f; });
+  if(!list.length){ tb.innerHTML = "<tr><td colspan=\"5\">No orders yet. Orders placed on the store will appear here.</td></tr>"; return; }
+  list.forEach(function(o){
+    var tr = document.createElement("tr");
+    var pillCls = o.status === "Approved" ? "appr" : (o.status === "Rejected" ? "rej" : (o.status === "Cancelled" ? "canc" : "pend"));
+    var cc = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0];
+    var amt = o.amount || (cc ? Number(cc.price) || 0 : 0);
+    tr.innerHTML = "<td><b>" + esc(o.name) + "</b><br><span style=\"color:var(--muted);font-size:.82rem\">" + esc(o.contact) + (o.mail ? " · " + esc(o.mail) : "") + "<br>" + esc(o.when) + "</span></td>"
+      + "<td>" + esc(o.title) + "</td><td>" + (amt ? inr(amt) : "FREE") + "</td>"
+      + "<td><span class=\"pill " + pillCls + "\">" + o.status + "</span></td>"
+      + "<td><div class=\"row-actions\">"
+      + (o.status !== "Approved" && o.status !== "Cancelled" ? "<button class=\"btn btn-sm btn-orange\" data-act=\"ap\" data-sound>Approve</button>" : "")
+      + (o.status !== "Rejected" && o.status !== "Cancelled" ? "<button class=\"btn btn-sm\" data-act=\"rj\" data-sound>Reject</button>" : "")
+      + (o.status !== "Cancelled" ? "<button class=\"btn btn-sm btn-danger\" data-act=\"cx\" data-sound>Cancel</button>" : "")
+      + "</div></td>";
+    var ap = tr.querySelector("[data-act=\"ap\"]"), rj = tr.querySelector("[data-act=\"rj\"]");
+    if(ap) ap.addEventListener("click", async function(){
+      if(MODE === "live"){
+        var r = await api("admin", {method: "POST", body: JSON.stringify({action: "approveOrder", id: o.id})});
+        if(!r || !r.ok){ toast("Approve failed: " + ((r && r.error) || "please try again."), true); return; }
+      } else {
+        var o2 = (DATA.orders || []).filter(function(x){ return String(x.id) === String(o.id); })[0];
+        if(o2){
+          o2.status = "approved";
+          var c2 = RAW.filter(function(x){ return String(x.id) === String(o2.courseId); })[0];
+          if(c2){ o2.driveUrl = c2.driveUrl || ""; o2.telegramChannel = c2.telegramChannel || ""; }
+          localSave();
+        }
+        state.orders = DATA.orders.map(normOrder);
+      }
+      await refreshAdminData();
+      toast("Order approved for " + o.name + ".");
+    });
+    if(rj) rj.addEventListener("click", async function(){
+      if(MODE === "live"){
+        var r = await api("admin", {method: "POST", body: JSON.stringify({action: "rejectOrder", id: o.id})});
+        if(!r || !r.ok){ toast("Reject failed: " + ((r && r.error) || "please try again."), true); return; }
+      } else {
+        var o3 = (DATA.orders || []).filter(function(x){ return String(x.id) === String(o.id); })[0];
+        if(o3){ o3.status = "rejected"; localSave(); }
+        state.orders = DATA.orders.map(normOrder);
+      }
+      await refreshAdminData();
+      toast("Order rejected.", true);
+    });
+    var cx = tr.querySelector("[data-act=\"cx\"]");
+    if(cx) cx.addEventListener("click", async function(){
+      if(MODE === "live"){
+        var r = await api("admin", {method: "POST", body: JSON.stringify({action: "cancelOrder", id: o.id})});
+        if(!r || !r.ok){ toast("Cancel failed: " + ((r && r.error) || "please try again."), true); return; }
+      } else {
+        var o4 = (DATA.orders || []).filter(function(x){ return String(x.id) === String(o.id); })[0];
+        if(o4){ o4.status = "cancelled"; localSave(); }
+        state.orders = DATA.orders.map(normOrder);
+      }
+      await refreshAdminData();
+      toast("Order cancelled.", true);
+    });
+    tb.appendChild(tr);
+  });
+}
+function renderStats(){
+  $("stCourses").textContent = state.courses.length;
+  $("stOrders").textContent = state.orders.length;
+  $("stPending").textContent = state.orders.filter(function(o){ return o.status === "Pending"; }).length;
+  var ap = state.orders.filter(function(o){ return o.status === "Approved"; });
+  if($("stApproved")) $("stApproved").textContent = ap.length;
+  if($("stRevenue")){
+    var rev = 0; ap.forEach(function(o){ var c = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0]; if(c) rev += Number(c.price) || 0; });
+    $("stRevenue").textContent = inr(rev);
+  }
+}
+function renderAll(){ renderCats(); renderChips(); renderCourses(); renderMine(); renderOrders(); renderStats(); fillFeaturedSelect(); }
+
+/* settings — change PIN */
+$("pinChangeForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var oldPin = $("pcOld").value, newPin = $("pcNew").value;
+  if(newPin.length < 4 || newPin.length > 12){ toast("New PIN must be 4–12 characters.", true); return; }
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "setPin", pin: newPin})});
+    if(!r || !r.ok){ toast("PIN change failed: " + ((r && r.error) || "verify your current PIN first."), true); return; }
+    TOKEN = "";
+    try{ localStorage.removeItem("iskill_token"); }catch(e2){}
+    adminAuthed = false;
+    toast("PIN changed. Use the new PIN next time you unlock the panel.");
+    showPinGate(); e.target.reset(); return;
+  }
+  if((await sha256("iskill-pin:" + oldPin)) !== (DATA.admin && DATA.admin.pinHash)){ toast("Current PIN is wrong.", true); return; }
+  DATA.admin.pinHash = await sha256("iskill-pin:" + newPin); localSave();
+  toast("PIN changed. Use the new PIN next time you unlock the panel.");
+  e.target.reset();
+});
+
+/* admin search/filter + settings */
+var _ms = $("mineSearch"); if(_ms) _ms.addEventListener("input", renderMine);
+var _of = $("orderFilter"); if(_of) _of.addEventListener("change", renderOrders);
+function fillFeaturedSelect(){
+  var sel = $("featuredCourse"); if(!sel) return;
+  var fid = (DATA && DATA.settings && DATA.settings.featuredCourseId) || "";
+  sel.innerHTML = "<option value=\"\">Automatic, first featured course</option>"
+    + state.courses.map(function(c){ return "<option value=\"" + esc(c.id) + "\"" + (String(c.id) === String(fid) ? " selected" : "") + ">" + esc(c.title) + "</option>"; }).join("");
+}
+var _ff = $("featForm"); if(_ff) _ff.addEventListener("submit", async function(e){
+  e.preventDefault();
+  var fid = $("featuredCourse").value;
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "saveSettings", settings: {featuredCourseId: fid}})});
+    if(!r || !r.ok){ toast("Save failed: " + ((r && r.error) || "try again."), true); return; }
+  } else { DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = fid; localSave(); }
+  DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = fid;
+  setHeroCover();
+  var ok = $("featOk"); if(ok){ ok.textContent = "Featured course saved — the hero now shows that course."; ok.style.display = "block"; }
+  toast("Featured course saved.");
+});
+var _tg = $("tgForm"); if(_tg) _tg.addEventListener("submit", async function(e){
+  e.preventDefault();
+  var url = $("tgUrl").value.trim();
+  if(url.indexOf("t.me/") === -1 && url.indexOf("telegram.me/") === -1){ toast("Paste a valid Telegram link (t.me/…).", true); return; }
+  TELEGRAM_URL = url; applyTelegramLinks();
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "saveSettings", settings: {telegramUrl: url}})});
+    if(!r || !r.ok){ toast("Save failed: " + ((r && r.error) || "try again."), true); return; }
+  } else {
+    DATA.settings = DATA.settings || {}; DATA.settings.telegramUrl = url; localSave();
+  }
+  var ok = $("tgOk"); if(ok){ ok.textContent = "Telegram link saved — live on the store now."; ok.style.display = "block"; }
+  toast("Telegram link saved.");
+});
+
+/* ================= init ================= */
+renderCats(); renderChips(); renderCourses();
+loadCatalog().then(async function(){
+  if(isAdminRoute()) enterAdmin();
+  renderAuthUI(); showView("home");
+  if(USER_TOKEN){ await authMe(); }
+  loadMyCourses(); loadMyOrders("all");
+});
+
+
+</script>
+</body>
+</html>

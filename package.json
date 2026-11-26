@@ -1,0 +1,10 @@
+{
+  "name": "iskill-world",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "iSkill World \u2014 course selling website with Vercel Serverless Functions + Vercel Blob backend",
+  "dependencies": {
+    "@vercel/blob": "^0.23.0"
+  }
+}
