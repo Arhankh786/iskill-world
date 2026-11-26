@@ -1,6 +1,6 @@
 // /api/auth — user signup / login / me. Stateless HMAC user tokens (see shared.js).
 // Passwords are stored only as salted scrypt hashes, never in plain text.
-import { loadData, saveData, ensureData, normalizeContact, makePasswordRecord, checkPassword, makeUserToken, checkUserToken, publicUser, newId, cors, sendJson, sendErr, readBody, bearerToken } from "./shared.js";
+import { loadData, saveData, reloadFresh, ensureData, normalizeContact, makePasswordRecord, checkPassword, makeUserToken, checkUserToken, publicUser, newId, cors, sendJson, sendErr, readBody, bearerToken } from "./shared.js";
 function validContact(c) {
   if (!c) return false;
   if (c.indexOf("@") > 0 && c.indexOf(".") > c.indexOf("@")) return true;
@@ -38,16 +38,43 @@ export default async function handler(req, res) {
       data.orders.forEach((o) => {
         if (!o.userId && (normalizeContact(o.contact) === contact || String(o.email || "").toLowerCase() === contact)) { o.userId = user.id; linked++; }
       });
-      await saveData(data);
+      // Never hand out a token for an account that did not persist: if the
+      // Blob write fails, the account would vanish on the next cold start
+      // and login from another phone would fail. Fail loudly instead.
+      const saved = await saveData(data);
+      if (!saved) return sendErr(res, "Could not save your account right now — please try again.", 500);
       return sendJson(res, { ok: true, token: makeUserToken(user), user: publicUser(user), linkedOrders: linked });
     }
     if (action === "login") {
       const contact = normalizeContact(body.contact || "");
       const password = String(body.password || "");
-      const user = data.users.find((u) => normalizeContact(u.contact) === contact);
+      let data2 = data;
+      let user = data2.users.find((u) => normalizeContact(u.contact) === contact);
+      // Right after a signup on another phone/instance, Blob may still be
+      // propagating the new user — re-read it fresh once before failing,
+      // so a correct login is not rejected as "Wrong login details".
+      if (!user || !checkPassword(password, user.pass)) {
+        data2 = ensureData(await reloadFresh());
+        user = data2.users.find((u) => normalizeContact(u.contact) === contact);
+      }
       if (!user || !checkPassword(password, user.pass))
         return sendErr(res, "Wrong login details. Try again.", 401);
       return sendJson(res, { ok: true, token: makeUserToken(user), user: publicUser(user) });
+    }
+    if (action === "delete") {
+      // Delete my own account: password-verified. Removes the user and
+      // ALL of their orders (purchased access ends with the account).
+      // The admin PIN, courses, settings and other buyers are untouched.
+      const user = checkUserToken(bearerToken(req), data.users);
+      if (!user) return sendErr(res, "Please login again.", 401);
+      const password = String(body.password || "");
+      if (!checkPassword(password, user.pass))
+        return sendErr(res, "Wrong password — your account was not deleted.", 401);
+      data.users = data.users.filter((u) => String(u.id) !== String(user.id));
+      data.orders = (data.orders || []).filter((o) => String(o.userId) !== String(user.id));
+      const saved = await saveData(data);
+      if (!saved) return sendErr(res, "Could not delete your account right now — please try again.", 500);
+      return sendJson(res, { ok: true, message: "Account deleted." });
     }
     return sendErr(res, "Unknown auth action: " + action, 400);
   } catch (e) { return sendErr(res, "Login failed: " + e.message, 500); }

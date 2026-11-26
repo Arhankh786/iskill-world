@@ -49,48 +49,71 @@ export function ensureData(data) {
   return data;
 }
 
-export async function loadData() {
-  if (memoryData && Array.isArray(memoryData.courses)) {
+export async function loadData(opts) {
+  opts = opts || {};
+  if (!opts.forceFresh && memoryData && Array.isArray(memoryData.courses)) {
     // In-memory is authoritative within one warm instance; Blob is the
     // persistent copy. Re-read Blob when a token exists so a redeploy
     // (cold start) picks up saved data.
     if (!process.env.BLOB_READ_WRITE_TOKEN) return memoryData;
   }
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    try {
-      const blob = await blobApi(); if (!blob) throw new Error("no blob package");
-      const { blobs } = await blob.list({ prefix: DATA_KEY, limit: 1 });
-      if (blobs && blobs[0]) {
-        const r = await fetch(blobs[0].url + (blobs[0].url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
-        const data = await r.json();
-        if (data && Array.isArray(data.courses)) { memoryData = ensureData(data); return memoryData; }
-      }
-      // Blob store exists but no data.json yet: first run only — seed and save.
-      const seed = seedData();
-      memoryData = seed;
-      await saveData(seed);
-      return seed;
-    } catch (e) {
-      // Blob read failed (transient): NEVER overwrite Blob with a fresh seed —
-      // that wipes the PIN, session, courses and orders. Serve in-memory only.
-      if (memoryData && Array.isArray(memoryData.courses)) return ensureData(memoryData);
+    // Vercel Blob reads can lag a fresh write by a moment (list/get are
+    // eventually consistent across instances). A login right after a
+    // signup on another phone/instance used to read the OLD data.json and
+    // fail with "Wrong login details" — so retry the read a few times
+    // before giving up. NEVER seed-overwrite here: if the list comes back
+    // empty transiently, wiping Blob with a fresh seed would delete the
+    // PIN, users, courses and orders.
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const blob = await blobApi(); if (!blob) throw new Error("no blob package");
+        const { blobs } = await blob.list({ prefix: DATA_KEY, limit: 1 });
+        if (blobs && blobs[0]) {
+          const r = await fetch(blobs[0].url + (blobs[0].url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
+          const data = await r.json();
+          if (data && Array.isArray(data.courses)) { memoryData = ensureData(data); return memoryData; }
+        }
+        lastErr = new Error("data.json not listed yet");
+      } catch (e) { lastErr = e; }
+      if (attempt < 2) await new Promise((res) => setTimeout(res, 350));
+    }
+    // Blob read failed (transient): serve in-memory only if we have it.
+    if (memoryData && Array.isArray(memoryData.courses)) return ensureData(memoryData);
+    if (lastErr && String(lastErr.message || "").indexOf("not listed") === -1) {
+      // Blob exists but is unreadable right now — serve a throwaway seed
+      // WITHOUT saving it, so a later good read is not wiped out.
       const seed = seedData();
       memoryData = seed;
       return seed;
     }
+    // Truly first run (no blob after retries, no memory): seed and save.
+    const seed = seedData();
+    memoryData = seed;
+    await saveData(seed);
+    return seed;
   }
   const seed = seedData();
   memoryData = seed;
   return seed;
 }
 
+// Re-read Blob from scratch, ignoring the warm instance's memory copy.
+// Used by login/signup so a user created a moment ago on another
+// instance/phone is found even while Blob is still propagating.
+export async function reloadFresh() {
+  memoryData = null;
+  return loadData({ forceFresh: true });
+}
+
 export async function saveData(data) {
   memoryData = data;
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    try { const blob = await blobApi(); if (blob) await blob.put(DATA_KEY, JSON.stringify(data), { access: "public", addRandomSuffix: false }); }
-    catch (e) { /* in-memory copy still works for this instance */ }
+    try { const blob = await blobApi(); if (!blob) return false; await blob.put(DATA_KEY, JSON.stringify(data), { access: "public", addRandomSuffix: false }); return true; }
+    catch (e) { return false; /* in-memory copy still works for this instance, but the caller must know it did NOT persist */ }
   }
-  return data;
+  return true;
 }
 
 export function parseDriveId(link) {

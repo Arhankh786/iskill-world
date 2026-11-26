@@ -90,6 +90,7 @@ header.site{position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:
 .hero-showcase{max-width:448px;margin:44px auto 0;animation:heroFloat 5.5s ease-in-out infinite}
 .hero-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:26px;overflow:visible;box-shadow:0 22px 44px rgba(20,20,20,.13);transition:transform .25s ease;text-align:left}
 .hero-card .hc-cover{height:176px;border-radius:26px 26px 0 0;overflow:hidden;position:relative}
+.hero-card .hc-cover img{width:100%;height:100%;object-fit:cover;display:block}
 @media(min-width:640px){.hero-card .hc-cover{height:208px}}
 .hc-grad{position:relative;width:100%;height:100%}
 .hc-ic{position:absolute;top:16px;left:16px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;color:#141414;box-shadow:0 6px 16px rgba(0,0,0,.18)}
@@ -202,6 +203,7 @@ section.block{margin-top:48px}
 .mine-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
 .mine-card.owned{border-color:rgba(255,149,0,.5)}
 .mine-cover{position:relative;height:128px;overflow:hidden}
+.mine-cover img{width:100%;height:100%;object-fit:cover;display:block}
 .mine-cover svg.art{width:100%;height:100%;display:block}
 .mine-body{padding:16px;display:flex;flex-direction:column;gap:8px}
 .mine-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -264,6 +266,15 @@ body.fab-hidden .tg-float{opacity:0;pointer-events:none;transform:scale(.85)}
 body[data-theme="dark"] .form-err{background:#3a1512;color:#ffb4a8}
 .form-ok{background:#e7f6ee;border:1.5px solid var(--green);color:#0e5c33;border-radius:10px;padding:11px 13px;font-weight:600;font-size:14px;margin-bottom:13px;display:none;line-height:1.5}
 body[data-theme="dark"] .form-ok{background:#123324;color:#9fe8c0}
+.form-warn{background:#fff4e0;border:1.5px solid #f5a623;color:#7a4a00;border-radius:10px;padding:9px 12px;font-weight:600;font-size:14px;margin-bottom:13px;display:none;line-height:1.5}
+body[data-theme="dark"] .form-warn{background:#33230a;color:#ffd28a}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:46px}
+.eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--dim);cursor:pointer;padding:6px;display:flex;align-items:center;min-height:0}
+.eye-btn svg{width:20px;height:20px}
+.eye-btn .eye-off{display:none}
+.eye-btn.showing .eye-off{display:block}
+.eye-btn.showing .eye-on{display:none}
 
 /* ---------- admin ---------- */
 #adminView{display:none}
@@ -393,6 +404,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
   <a class="drawer-item" href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>Support &mdash; @iSkill_Admin</a>
   <button class="drawer-item" id="drawerAuthBtn" data-sound><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>Login / Sign up</button>
   <button class="drawer-item danger" id="drawerLogoutBtn" data-sound style="display:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>Logout</button>
+  <button class="drawer-item danger" id="drawerDeleteBtn" data-sound style="display:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>Delete account</button>
 </nav>
 
 <div id="storefront">
@@ -616,7 +628,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
 
       <div class="panel" data-panel="add">
         <h3 id="addTitle">Add a new course</h3>
-        <p class="sub">Add a course manually. Upload a cover image or paste an image link — and add a Drive link and/or a Telegram channel link for this course.</p>
+        <p class="sub">Add a course manually. Upload a cover image or paste an image link — thumbnails are auto-enhanced on upload (sharpened, high quality) — and add a Drive link and/or a Telegram channel link for this course.</p>
         <div class="form-err" id="addErr"></div>
         <div class="form-ok" id="addOk"></div>
         <form id="addForm">
@@ -645,6 +657,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
               <input id="fImgFile" type="file" accept="image/*" style="display:none" />
               <div class="or">OR</div>
               <input id="fImgUrl" placeholder="Paste image link (https://…)" style="width:100%;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--ink);padding:9px 12px;font-weight:500" />
+              <p class="hint" id="imgEnhanceNote" style="margin-top:8px"></p>
             </div>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -717,6 +730,12 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
           <div class="form-ok" id="seedOk"></div>
           <button class="btn btn-orange" id="restoreSeedBtn" type="button" data-sound>Restore sample courses</button>
         </div>
+        <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;margin-bottom:16px">
+          <h3 style="font-size:18px">Enhance all thumbnails</h3>
+          <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">Runs the same auto-enhance (sharpen, better contrast and colour, max 1200px, high-quality JPEG) over every course that already has a thumbnail. Courses without a thumbnail are skipped. Courses, orders, buyers, your admin PIN and settings are not touched.</p>
+          <div class="form-ok" id="enhOk"></div>
+          <button class="btn btn-orange" id="enhanceAllBtn" type="button" data-sound>Enhance all thumbnails</button>
+        </div>
         <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px">
           <h3 style="font-size:18px">Change PIN</h3>
           <form id="pinChangeForm" style="max-width:420px;margin-top:12px">
@@ -756,10 +775,10 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
       <h3 id="coTitle" style="margin-top:8px"></h3>
       <div class="form-err" id="coErr"></div>
       <div class="form-ok" id="coOk"></div>
-      <form id="coForm">
-        <div class="field"><label for="coName">Your name *</label><input id="coName" placeholder="Full name" /></div>
-        <div class="field"><label for="coContact">Mobile number or Telegram username *</label><input id="coContact" placeholder="e.g. 98765 43210 or @username" /></div>
-        <div class="field"><label for="coMail">Email (optional)</label><input id="coMail" type="email" placeholder="you@example.com" /></div>
+      <form id="coForm" method="post" action="/api/order">
+        <div class="field"><label for="coName">Your name *</label><input id="coName" name="name" autocomplete="name" placeholder="Full name" /></div>
+        <div class="field"><label for="coContact">Mobile number or Telegram username *</label><input id="coContact" name="contact" autocomplete="tel" placeholder="e.g. 98765 43210 or @username" /></div>
+        <div class="field"><label for="coMail">Email (optional)</label><input id="coMail" name="email" type="email" autocomplete="email" placeholder="you@example.com" /></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div class="price" id="coPrice"></div>
           <button type="submit" class="btn btn-orange" data-sound>Place Order</button>
@@ -782,13 +801,32 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
       </div>
       <div class="form-err" id="authErr"></div>
       <div class="form-ok" id="authOk"></div>
-      <form id="authForm" style="margin-top:6px">
-        <div class="field" id="authNameWrap" style="display:none"><label for="authName">Your name *</label><input id="authName" placeholder="Full name" /></div>
-        <div class="field"><label for="authContact">Mobile number or email *</label><input id="authContact" placeholder="e.g. 98765 43210 or you@example.com" /></div>
-        <div class="field"><label for="authPass">Password (4&ndash;12 characters) *</label><input id="authPass" type="password" placeholder="Your password" /></div>
+      <form id="authForm" method="post" action="/api/auth" style="margin-top:6px">
+        <div class="field" id="authNameWrap" style="display:none"><label for="authName">Your name *</label><input id="authName" name="name" autocomplete="name" placeholder="Full name" /></div>
+        <div class="field"><label for="authContact">Mobile number or email *</label><input id="authContact" name="username" autocomplete="username" inputmode="email" placeholder="e.g. 98765 43210 or you@example.com" /></div>
+        <div class="field"><label for="authPass">Password (4&ndash;12 characters) *</label><div class="pass-wrap"><input id="authPass" name="password" type="password" autocomplete="current-password" placeholder="Your password" /><button type="button" class="eye-btn" data-eye="authPass" aria-label="Show password" data-sound><svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg></button></div></div>
+        <div class="field" id="authConfirmWrap" style="display:none"><label for="authConfirm">Confirm password *</label><div class="pass-wrap"><input id="authConfirm" name="confirm-password" type="password" autocomplete="new-password" placeholder="Type the same password again" /><button type="button" class="eye-btn" data-eye="authConfirm" aria-label="Show password" data-sound><svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg></button></div></div>
+        <div class="form-warn" id="authDemoWarn" style="display:none"></div>
         <button type="submit" class="btn btn-orange btn-block" id="authSubmit" data-sound>Login</button>
       </form>
       <p class="hint" style="margin-top:12px">Your password is stored only as a secure hash — nobody, not even the seller, can see it. If you bought a course before with the same mobile/email, it will appear in your account after signup.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="modal-back" id="deleteModal">
+  <div class="modal modal-wrap">
+    <button class="x-btn" data-close data-sound aria-label="Close">&#10005;</button>
+    <div class="m-body">
+      <h3 style="margin-top:8px">Delete your account?</h3>
+      <p class="m-desc">This permanently deletes your account and all your orders. Courses you bought will no longer be accessible. This cannot be undone.</p>
+      <div class="form-err" id="delErr"></div>
+      <form id="delForm" method="post" action="/api/auth" style="margin-top:6px">
+        <div class="field"><label for="delPass">Enter your password to confirm *</label><div class="pass-wrap"><input id="delPass" name="password" type="password" autocomplete="current-password" placeholder="Your password" /><button type="button" class="eye-btn" data-eye="delPass" aria-label="Show password" data-sound><svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg></button></div></div>
+        <button type="submit" class="btn btn-block" id="delSubmit" style="background:var(--danger);color:#fff" data-sound>Yes, delete my account</button>
+        <button type="button" class="btn btn-white btn-block" id="delCancel" data-sound style="margin-top:10px">Cancel — keep my account</button>
+      </form>
     </div>
   </div>
 </div>
@@ -890,6 +928,7 @@ function featuredCourse(){
 function setHeroCover(){
   var c = featuredCourse();
   if(!c) return;
+  window.__heroCourse = c;
   $("heroCover").innerHTML = heroCoverHTML(c);
   var ht = $("heroCourseTitle"); if(ht) ht.textContent = c.title;
   var hm = $("heroCourseMeta"); if(hm){ var parts = [(c.lessons || 0) + " lessons"]; if(c.duration) parts.push(c.duration); parts.push(c.level || ""); hm.textContent = parts.join(" \u00b7 "); }
@@ -1059,12 +1098,22 @@ function artSVG(course){
     + "<text x=\"200\" y=\"186\" text-anchor=\"middle\" font-family=\"Poppins, sans-serif\" font-weight=\"700\" font-size=\"12\" letter-spacing=\"3\" fill=\"#141414\" fill-opacity=\"0.85\">" + esc(cat.toUpperCase()) + "</text>"
     + "</svg>";
 }
-function heroCoverHTML(course){
+function heroCoverGradient(course){
   var g = gradFor(course);
   return "<div class=\"hc-grad\" style=\"background:linear-gradient(135deg," + g[0] + "," + g[1] + ")\">"
     + "<span class=\"hc-ic\">" + catIcon(catOf(course)) + "</span>"
     + "<span class=\"hc-catpill\">" + esc(catOf(course).toUpperCase()) + "</span></div>";
 }
+/* Hero cover: the admin-uploaded thumbnail when the course has one,
+   the gradient placeholder only when it really has none. */
+function heroCoverHTML(course){
+  if(course.cover) return "<img src=\"" + esc(course.cover) + "\" alt=\"" + esc(cleanTitle(course.title)) + " cover\" style=\"width:100%;height:100%;object-fit:cover;display:block\" onerror=\"window.__heroCoverFallback()\">";
+  return heroCoverGradient(course);
+}
+window.__heroCoverFallback = function(){
+  var c = window.__heroCourse;
+  if(c && $("heroCover")) $("heroCover").innerHTML = heroCoverGradient(c);
+};
 function coverHTML(course){
   if(course.cover) return "<img src=\"" + esc(course.cover) + "\" alt=\"" + esc(course.title) + " cover\" onerror=\"this.outerHTML = window.__artFallback(this)\" data-art-for=\"" + course.id + "\">";
   return artSVG(course);
@@ -1258,7 +1307,7 @@ $("coForm").addEventListener("submit", async function(e){
   if(!c) return;
   var ok = $("coOk");
   if(MODE === "live"){
-    var r = await api("order", {method: "POST", token: USER_TOKEN, body: JSON.stringify({courseId: c.id, name: name})});
+    var r = await api("order", {method: "POST", token: USER_TOKEN, body: JSON.stringify({courseId: c.id, name: name, email: mail})});
     if(!r || !r.ok){
       err.textContent = "Order failed: " + ((r && r.error) || "please try again."); err.style.display = "block"; return;
     }
@@ -1292,7 +1341,18 @@ async function loadMyCourses(){
   var list = [];
   if(MODE === "live"){
     var r = await api("order", {token: USER_TOKEN});
-    if(!r || !r.ok){ if(out) out.innerHTML = "<p class=\"hint\">Could not load your courses. Please login again.</p>"; return; }
+    if(!r || !r.ok){
+      /* Token rejected (e.g. account deleted elsewhere, or expired):
+         drop the stale session so the login prompt shows instead of a
+         dead "Could not load" message. */
+      if(r && r.error && r.error.toLowerCase().indexOf("login") > -1){
+        logoutUserSilent();
+        if(prompt) prompt.style.display = "block"; if(content) content.style.display = "none";
+        if(out) out.innerHTML = "";
+        return;
+      }
+      if(out) out.innerHTML = "<p class=\"hint\">Could not load your courses. Please login again.</p>"; return;
+    }
     list = r.orders || [];
   } else {
     list = (DATA.orders || []).filter(function(o){ return String(o.userId) === String(USER.id); }).map(function(o){
@@ -1313,7 +1373,7 @@ async function loadMyCourses(){
     var amt = (o.amount != null && o.amount !== "") ? Number(o.amount) : (cc ? Number(cc.price) || 0 : 0);
     var h = "<div class=\"mine-card" + (isOwnedCard ? " owned" : "") + "\">";
     if(isOwnedCard){
-      h += "<div class=\"mine-cover\">" + (cc ? artSVG({id: String(o.courseId), title: o.courseTitle || "", cat: cc.category || ""}) : "") + "<span class=\"owned-badge\">OWNED</span></div>";
+      h += "<div class=\"mine-cover\">" + (cc ? coverHTML(cc) : "") + "<span class=\"owned-badge\">OWNED</span></div>";
     }
     h += "<div class=\"mine-body\"><div class=\"mine-head\"><b>" + esc(o.courseTitle || "") + "</b> <span class=\"pill " + cls + "\">" + (isOwnedCard ? "OWNED" : label.toUpperCase()) + "</span></div>";
     h += "<span class=\"hint\">" + esc(o.code || "") + " \u00b7 " + (amt ? inr(amt) : "Free") + (o.createdAt ? " \u00b7 " + esc(new Date(o.createdAt).toLocaleDateString("en-IN")) : "") + "</span>";
@@ -1401,22 +1461,53 @@ function renderAuthUI(){
   var da = $("drawerAvatar"); if(da) da.textContent = USER ? (USER.name || "U").charAt(0).toUpperCase() : "G";
   var ab = $("drawerAuthBtn"); if(ab) ab.style.display = USER ? "none" : "";
   var lb = $("drawerLogoutBtn"); if(lb) lb.style.display = USER ? "" : "none";
+  var db = $("drawerDeleteBtn"); if(db) db.style.display = USER ? "" : "none";
 }
 function setUser(token, user){
   USER_TOKEN = token; USER = user;
   try{ localStorage.setItem("iskill_user_token", token); localStorage.setItem("iskill_user", JSON.stringify(user)); }catch(e){}
+}
+function resetEye(btn){
+  if(!btn) return;
+  var inp = $(btn.getAttribute("data-eye"));
+  if(inp) inp.type = "password";
+  btn.classList.remove("showing");
+  btn.setAttribute("aria-label", "Show password");
 }
 function openAuth(mode){
   authMode = mode || "login";
   $("authTitle").textContent = authMode === "signup" ? "Create your account" : "Login";
   $("authSub").textContent = authMode === "signup" ? "Create a free account — your courses and orders stay private to you." : "Login to see your courses and orders — only you can see them.";
   $("authNameWrap").style.display = authMode === "signup" ? "block" : "none";
+  $("authConfirmWrap").style.display = authMode === "signup" ? "block" : "none";
+  /* Chrome/Google password manager: login uses current-password, signup
+     uses new-password — that is what makes the browser offer to save the
+     account and suggest it next time. */
+  $("authPass").setAttribute("autocomplete", authMode === "signup" ? "new-password" : "current-password");
+  var cf = $("authConfirm"); if(cf){ cf.value = ""; }
+  document.querySelectorAll(".eye-btn").forEach(resetEye);
+  var dw = $("authDemoWarn");
+  if(dw){
+    if(MODE !== "live"){ dw.textContent = "Demo mode — the backend is not connected right now, so an account made here will work only on this device. Check your connection and try again for a real account."; dw.style.display = "block"; }
+    else dw.style.display = "none";
+  }
   $("authTabLogin").classList.toggle("active", authMode === "login");
   $("authTabSignup").classList.toggle("active", authMode === "signup");
   $("authSubmit").textContent = authMode === "signup" ? "Create account" : "Login";
   $("authErr").style.display = "none"; $("authOk").style.display = "none";
   openModal("authModal");
 }
+/* password eye toggle: tap to show the typed password, tap again to hide */
+document.addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest(".eye-btn") : null;
+  if(!b) return;
+  var inp = $(b.getAttribute("data-eye"));
+  if(!inp) return;
+  var show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  b.classList.toggle("showing", show);
+  b.setAttribute("aria-label", show ? "Hide password" : "Show password");
+});
 function logoutUserSilent(){
   USER_TOKEN = ""; USER = null; PURCHASED = {};
   try{ localStorage.removeItem("iskill_user_token"); localStorage.removeItem("iskill_user"); }catch(e){}
@@ -1456,6 +1547,32 @@ $("drawerClose").addEventListener("click", closeDrawer);
 $("drawerBack").addEventListener("click", closeDrawer);
 $("drawerAuthBtn").addEventListener("click", function(){ closeDrawer(); openAuth("login"); });
 $("drawerLogoutBtn").addEventListener("click", function(){ closeDrawer(); logoutUser(); });
+/* ---- delete my account: confirm with password, then it is gone ---- */
+$("drawerDeleteBtn").addEventListener("click", function(){ closeDrawer(); $("delErr").style.display = "none"; $("delPass").value = ""; openModal("deleteModal"); });
+$("delCancel").addEventListener("click", function(){ closeModal("deleteModal"); });
+$("delForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var pass = $("delPass").value;
+  var err = $("delErr");
+  err.style.display = "none";
+  if(!USER){ closeModal("deleteModal"); return; }
+  if(pass.length < 4){ err.textContent = "Enter your password to confirm."; err.style.display = "block"; return; }
+  if(MODE === "live"){
+    var r = await api("auth", {method: "POST", token: USER_TOKEN, body: JSON.stringify({action: "delete", password: pass})});
+    if(!r || !r.ok){ err.textContent = (r && r.error) || "Could not delete your account. Try again."; err.style.display = "block"; return; }
+  } else {
+    var h = await sha256("iskill-user:" + normContact(USER.contact) + ":" + pass);
+    var u = (DATA.users || []).filter(function(x){ return String(x.id) === String(USER.id); })[0];
+    if(!u || u.passHash !== h){ err.textContent = "Wrong password — your account was not deleted."; err.style.display = "block"; return; }
+    DATA.users = DATA.users.filter(function(x){ return String(x.id) !== String(USER.id); });
+    DATA.orders = (DATA.orders || []).filter(function(o){ return String(o.userId) !== String(USER.id); });
+    localSave();
+  }
+  closeModal("deleteModal");
+  logoutUserSilent(); myOrdersCache = null;
+  renderCourses(); loadMyCourses(); loadMyOrders("all"); showView("home");
+  toast("Your account and orders were deleted.");
+});
 var _mlb = $("mineLoginBtn"); if(_mlb) _mlb.addEventListener("click", function(){ openAuth("login"); });
 $("authTabLogin").addEventListener("click", function(){ openAuth("login"); });
 $("authTabSignup").addEventListener("click", function(){ openAuth("signup"); });
@@ -1470,6 +1587,11 @@ $("authForm").addEventListener("submit", async function(e){
   if(authMode === "signup" && name.length < 2) return fail("Please enter your name.");
   if(!contact || contact.length < 5) return fail("Enter a valid mobile number or email.");
   if(pass.length < 4 || pass.length > 12) return fail("Password must be 4–12 characters.");
+  if(authMode === "signup" && pass !== $("authConfirm").value) return fail("Passwords match nahi kar rahe — dobara check karo.");
+  /* If the catalog load failed earlier the site fell back to demo mode,
+     where accounts live only on this device. Re-check the live backend
+     once before creating a device-only account. */
+  if(MODE !== "live"){ await loadCatalog(); }
   if(MODE === "live"){
     var r = await api("auth", {method: "POST", token: null, body: JSON.stringify({action: authMode, name: name, contact: contact, password: pass})});
     if(!r || !r.ok) return fail((r && r.error) || "Login failed. Try again.");
@@ -1615,37 +1737,98 @@ $("fCat").addEventListener("change", function(){
   $("newCatWrap").style.display = this.value === "__new" ? "block" : "none";
 });
 
-/* image upload — downscaled to max 800px JPEG so the server accepts it */
+/* ---- thumbnail auto-enhancer ----
+   Every thumbnail the admin sets is enhanced in the browser before it is
+   saved: resized to max 1200px wide, contrast/saturation/brightness lifted
+   and sharpened (3x3 convolution), exported as JPEG quality 0.9 — stepped
+   down only if the result would exceed the server's ~1.5 MB cover limit.
+   Aspect ratio is always kept. */
+function enhanceImage(img, done){
+  function render(maxW, q, next){
+    var s = Math.min(1, maxW / img.width);
+    var w = Math.max(1, Math.round(img.width * s)), h = Math.max(1, Math.round(img.height * s));
+    var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+    var ctx = cv.getContext("2d");
+    try{ ctx.filter = "contrast(1.12) saturate(1.18) brightness(1.03)"; }catch(e){}
+    ctx.drawImage(img, 0, 0, w, h);
+    try{ ctx.filter = "none"; }catch(e){}
+    /* sharpen: 3x3 convolution, edges clamped */
+    try{
+      var id = ctx.getImageData(0, 0, w, h), src = id.data, out = ctx.createImageData(w, h), dst = out.data;
+      var K = [0,-1,0,-1,5,-1,0,-1,0];
+      for(var y = 0; y < h; y++) for(var x = 0; x < w; x++){
+        for(var ch = 0; ch < 3; ch++){
+          var acc = 0;
+          for(var ky = -1; ky <= 1; ky++) for(var kx = -1; kx <= 1; kx++){
+            var px = Math.min(w - 1, Math.max(0, x + kx)), py = Math.min(h - 1, Math.max(0, y + ky));
+            acc += src[(py * w + px) * 4 + ch] * K[(ky + 1) * 3 + (kx + 1)];
+          }
+          dst[(y * w + x) * 4 + ch] = Math.min(255, Math.max(0, acc));
+        }
+        dst[(y * w + x) * 4 + 3] = src[(y * w + x) * 4 + 3];
+      }
+      ctx.putImageData(out, 0, 0);
+    }catch(e){}
+    var url = "";
+    try{ url = cv.toDataURL("image/jpeg", q); }catch(e){}
+    if(url && url.length > 1900000 && next) return next();
+    done(url || "");
+  }
+  render(1200, .9, function(){ render(1000, .8, function(){ render(800, .75, null); }); });
+}
+function enhanceFromDataUrl(dataUrl, done){
+  var img = new Image();
+  img.onload = function(){ enhanceImage(img, done); };
+  img.onerror = function(){ done(""); };
+  img.src = dataUrl;
+}
+function enhanceFromUrl(url, done){
+  /* fetch the image (needs the host to allow CORS); on failure the caller keeps the plain URL */
+  fetch(url, {mode: "cors"}).then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.blob(); }).then(function(b){
+    if(!b || b.type.indexOf("image") !== 0) throw new Error("not an image");
+    var obj = URL.createObjectURL(b);
+    var img = new Image();
+    img.onload = function(){ URL.revokeObjectURL(obj); enhanceImage(img, done); };
+    img.onerror = function(){ URL.revokeObjectURL(obj); done(""); };
+    img.src = obj;
+  }).catch(function(){ done(""); });
+}
+function imgNote(msg){ var n = $("imgEnhanceNote"); if(n) n.textContent = msg || ""; }
 $("fImgFile").addEventListener("change", function(){
   var f = this.files[0]; if(!f) return;
   if(f.size > 2.5 * 1024 * 1024){ toast("Image is large — under 2.5 MB works best.", true); }
+  imgNote("Enhancing thumbnail…");
   var r = new FileReader();
   r.onload = function(){
-    var img = new Image();
-    img.onload = function(){
-      var s = Math.min(1, 800 / img.width);
-      var cv = document.createElement("canvas");
-      cv.width = Math.max(1, Math.round(img.width * s)); cv.height = Math.max(1, Math.round(img.height * s));
-      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-      var dataUrl = cv.toDataURL("image/jpeg", .82);
+    enhanceFromDataUrl(r.result, function(enhanced){
+      var dataUrl = enhanced || r.result;
       state.uploadedImg = dataUrl;
       var p = $("imgPreview"); p.src = dataUrl; p.style.display = "block";
       $("fImgUrl").value = "";
-    };
-    img.onerror = function(){
-      state.uploadedImg = r.result;
-      var p2 = $("imgPreview"); p2.src = r.result; p2.style.display = "block";
-      $("fImgUrl").value = "";
-    };
-    img.src = r.result;
+      imgNote(enhanced ? "Thumbnail auto-enhanced ✨ — resized to 1200px, sharpened, saved as high-quality JPEG." : "Thumbnail saved as-is (could not enhance this file).");
+    });
   };
   r.readAsDataURL(f);
 });
+var _urlEnhT = null;
 $("fImgUrl").addEventListener("input", function(){
-  if(this.value.trim()){
-    state.uploadedImg = "";
-    var p = $("imgPreview"); p.src = this.value.trim(); p.style.display = "block";
-  }
+  var u = this.value.trim();
+  if(!u){ state.uploadedImg = ""; imgNote(""); return; }
+  var p = $("imgPreview"); p.src = u; p.style.display = "block";
+  state.uploadedImg = "";
+  imgNote("Enhancing thumbnail…");
+  clearTimeout(_urlEnhT);
+  _urlEnhT = setTimeout(function(){
+    enhanceFromUrl(u, function(enhanced){
+      if(enhanced){
+        state.uploadedImg = enhanced;
+        var p2 = $("imgPreview"); p2.src = enhanced; p2.style.display = "block";
+        imgNote("Thumbnail auto-enhanced ✨ — resized to 1200px, sharpened, saved as high-quality JPEG.");
+      } else {
+        imgNote("Could not enhance this link (the site blocked downloading it) — saved as-is.");
+      }
+    });
+  }, 600);
 });
 function currentCover(){
   if(state.uploadedImg) return state.uploadedImg;
@@ -1654,7 +1837,7 @@ function currentCover(){
 }
 function resetAddForm(){
   $("addForm").reset(); $("fEditId").value = ""; state.editingId = null; state.uploadedImg = "";
-  $("imgPreview").style.display = "none"; $("newCatWrap").style.display = "none";
+  $("imgPreview").style.display = "none"; $("newCatWrap").style.display = "none"; imgNote("");
   $("addTitle").textContent = "Add a new course"; $("addSubmit").textContent = "Publish Course";
   $("addErr").style.display = "none"; $("addOk").style.display = "none";
 }
@@ -1769,8 +1952,9 @@ function renderMine(){
     var tr = document.createElement("tr");
     tr.innerHTML = "<td><b>" + esc(c.title) + "</b>" + (isHero ? " <span class=\"hero-badge\" style=\"background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;vertical-align:middle\">★ HERO</span>" : "") + "</td><td>" + esc(c.cat) + "</td><td>" + (c.price ? inr(c.price) : "<b style=\"color:var(--green)\">FREE</b>") + "</td>"
       + "<td>" + (c.drive ? "<a href=\"" + esc(c.drive) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Open ↗</a>" : "<span style=\"color:var(--red);font-weight:800\">Missing</span>") + "</td>"
-      + "<td><div class=\"row-actions\"><button class=\"btn btn-sm\" data-act=\"hero\" data-sound" + (isHero ? " disabled style=\"opacity:.55;cursor:default\"" : "") + ">" + (isHero ? "Hero me hai" : "Make Hero") + "</button><button class=\"btn btn-sm\" data-act=\"edit\" data-sound>Edit</button><button class=\"btn btn-sm btn-danger\" data-act=\"del\" data-sound>Remove</button></div></td>";
+      + "<td><div class=\"row-actions\"><button class=\"btn btn-sm\" data-act=\"hero\" data-sound" + (isHero ? " disabled style=\"opacity:.55;cursor:default\"" : "") + ">" + (isHero ? "Hero me hai" : "Make Hero") + "</button><button class=\"btn btn-sm\" data-act=\"enh\" data-sound" + (c.cover ? "" : " disabled style=\"opacity:.55;cursor:default\"") + ">✨ Enhance</button><button class=\"btn btn-sm\" data-act=\"edit\" data-sound>Edit</button><button class=\"btn btn-sm btn-danger\" data-act=\"del\" data-sound>Remove</button></div></td>";
     tr.querySelector("[data-act=\"edit\"]").addEventListener("click", function(){ editCourse(c.id); });
+    if(c.cover) tr.querySelector("[data-act=\"enh\"]").addEventListener("click", function(){ enhanceCourseCover(c.id); });
     tr.querySelector("[data-act=\"del\"]").addEventListener("click", function(){ removeCourse(c.id); });
     if(!isHero) tr.querySelector("[data-act=\"hero\"]").addEventListener("click", function(){ makeHero(c.id); });
     tb.appendChild(tr);
@@ -1977,6 +2161,53 @@ var _rs = $("restoreSeedBtn"); if(_rs) _rs.addEventListener("click", async funct
     }
   } finally { _rs.disabled = false; _rs.textContent = "Restore sample courses"; }
 });
+
+/* enhance thumbnails — the same auto-enhancer, over existing courses.
+   Returns "enhanced" | "skipped" (no thumbnail / already identical) | "failed".
+   Never deletes anything: it only replaces a course's cover with its enhanced version. */
+async function enhanceOneCourse(rawCourse){
+  var cover = rawCourse.cover || "";
+  if(!cover) return "skipped";
+  var enhanced = await new Promise(function(res){
+    if(cover.indexOf("data:") === 0) enhanceFromDataUrl(cover, function(u){ res(u); });
+    else enhanceFromUrl(cover, function(u){ res(u); });
+  });
+  if(!enhanced) return "failed";
+  if(enhanced === cover) return "skipped";
+  var updated = Object.assign({}, rawCourse, {cover: enhanced, coverKind: "image"});
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "updateCourse", id: rawCourse.id, course: updated})});
+    if(!r || !r.ok) return "failed";
+  } else {
+    var i = DATA.courses.findIndex(function(x){ return String(x.id) === String(rawCourse.id); });
+    if(i > -1){ DATA.courses[i] = updated; localSave(); }
+  }
+  return "enhanced";
+}
+var _eh = $("enhanceAllBtn"); if(_eh) _eh.addEventListener("click", async function(){
+  if(!confirm("Enhance every course thumbnail? This sharpens and re-saves each cover. Courses, orders, buyers and your PIN are not touched.")) return;
+  _eh.disabled = true; _eh.textContent = "Enhancing…";
+  var done = 0, skip = 0, fail = 0;
+  try{
+    var list = (RAW || []).slice();
+    for(var i = 0; i < list.length; i++){
+      var st = await enhanceOneCourse(list[i]);
+      if(st === "enhanced") done++; else if(st === "skipped") skip++; else fail++;
+    }
+    await loadCatalog(); await refreshAdminData();
+    var msg = done + " enhanced · " + skip + " skipped (no thumbnail) · " + fail + " failed.";
+    var ok = $("enhOk"); if(ok){ ok.textContent = msg; ok.style.display = "block"; }
+    toast(msg);
+  } finally { _eh.disabled = false; _eh.textContent = "Enhance all thumbnails"; }
+});
+async function enhanceCourseCover(id){
+  var raw = (RAW || []).filter(function(x){ return String(x.id) === String(id); })[0];
+  if(!raw || !raw.cover){ toast("This course has no thumbnail to enhance.", true); return; }
+  toast("Enhancing thumbnail…");
+  var st = await enhanceOneCourse(raw);
+  await loadCatalog(); await refreshAdminData();
+  toast(st === "enhanced" ? "Thumbnail enhanced ✨" : (st === "skipped" ? "Thumbnail already at its best." : "Enhance failed — the image could not be downloaded."), st !== "enhanced");
+}
 
 /* ================= init ================= */
 renderCats(); renderChips(); renderCourses();

@@ -24,7 +24,12 @@ export default async function handler(req, res) {
       return sendErr(res, "You already own this course", 409);
     const name = String(body.name || user.name || "").trim();
     if (name.length < 2) return sendErr(res, "Name is required");
-    const order = { id: newId("ord"), code: "ORD-" + String(1000 + data.orders.length + 1), courseId: course.id, courseTitle: course.title, userId: user.id, name, contact: user.contact, email: user.contact.indexOf("@") > 0 ? user.contact : (body.email || ""), amount: Number(course.price) || 0, status: course.free ? "approved" : "pending", driveUrl: course.driveUrl || "", telegramChannel: course.telegramChannel || "", createdAt: new Date().toISOString() };
+    // Order code must stay unique even after orders are removed (e.g. when
+    // a course or a buyer account is deleted) — fall back to a
+    // timestamp code if the sequential one is already taken.
+    let code = "ORD-" + String(1000 + data.orders.length + 1);
+    if (data.orders.find((o) => o.code === code)) code = "ORD-" + Date.now().toString(36).toUpperCase();
+    const order = { id: newId("ord"), code, courseId: course.id, courseTitle: course.title, userId: user.id, name, contact: user.contact, email: user.contact.indexOf("@") > 0 ? user.contact : (body.email || ""), amount: Number(course.price) || 0, status: course.free ? "approved" : "pending", driveUrl: course.driveUrl || "", telegramChannel: course.telegramChannel || "", createdAt: new Date().toISOString() };
     data.orders.push(order);
     await saveData(data);
     return sendJson(res, { ok: true, order: mineView(order) });
