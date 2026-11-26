@@ -776,9 +776,11 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
       <div class="form-err" id="coErr"></div>
       <div class="form-ok" id="coOk"></div>
       <form id="coForm" method="post" action="/api/order">
+        <p class="hint" id="coAccountLine" style="margin:0 0 10px"></p>
         <div class="field"><label for="coName">Your name *</label><input id="coName" name="name" autocomplete="name" placeholder="Full name" /></div>
-        <div class="field"><label for="coContact">Mobile number or Telegram username *</label><input id="coContact" name="contact" autocomplete="tel" placeholder="e.g. 98765 43210 or @username" /></div>
-        <div class="field"><label for="coMail">Email (optional)</label><input id="coMail" name="email" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+        <div class="field"><label for="coMobile">Mobile number</label><input id="coMobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 98765 43210" /></div>
+        <div class="field"><label for="coTelegram">Telegram ID</label><input id="coTelegram" name="telegram" autocomplete="off" placeholder="e.g. @username" /></div>
+        <p class="hint" style="margin:2px 0 10px">Enter your Telegram ID or Mobile number — either one is required, the other is optional.</p>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div class="price" id="coPrice"></div>
           <button type="submit" class="btn btn-orange" data-sound>Place Order</button>
@@ -909,6 +911,7 @@ function normOrder(o){
   var label = st.charAt(0).toUpperCase() + st.slice(1);
   return {id: o.id, code: o.code || "", courseId: o.courseId, title: o.courseTitle || o.title || "",
     name: o.name || "", contact: o.contact || "", mail: o.email || o.mail || "",
+    mobile: o.mobile || "", telegram: o.telegram || "",
     amount: (o.amount != null ? o.amount : 0), status: label, rawStatus: st,
     drive: o.driveUrl || o.drive || "", telegram: o.telegramChannel || o.telegram || "",
     when: o.createdAt ? new Date(o.createdAt).toLocaleString("en-IN") : (o.when || "")};
@@ -1291,23 +1294,46 @@ function openCheckout(id){
   $("coErr").style.display = "none"; $("coOk").style.display = "none";
   $("coForm").reset();
   $("coName").value = USER.name || "";
-  $("coContact").value = USER.contact || "";
-  $("coContact").readOnly = true;
+  /* Mobile + Telegram are editable — the buyer types them fresh (or they
+     prefill from the account). Never readOnly: a readOnly field never
+     opens the keyboard on mobile, which is why buyers could not type. */
+  var _digits = String(USER.contact || "").replace(/\D/g, "");
+  $("coMobile").value = USER.mobile || (_digits.length >= 10 ? _digits : "");
+  $("coTelegram").value = USER.telegram || "";
+  var _acct = $("coAccountLine");
+  if(_acct){
+    var _em = (USER.contact && USER.contact.indexOf("@") > 0) ? USER.contact : "";
+    _acct.textContent = _em ? ("This order will be placed on your account: " + _em) : ("This order will be placed on your account: " + (USER.name || USER.contact || ""));
+  }
   openModal("checkoutModal");
 }
 $("coForm").addEventListener("submit", async function(e){
   e.preventDefault();
-  var name = $("coName").value.trim(), contact = $("coContact").value.trim(), mail = $("coMail").value.trim();
+  var name = $("coName").value.trim(),
+      mobile = $("coMobile").value.trim(),
+      telegram = $("coTelegram").value.trim().replace(/^@+/, "");
   var err = $("coErr");
-  if(name.length < 2 || contact.length < 5){
-    err.textContent = "Please enter your name and a valid mobile number or Telegram username."; err.style.display = "block"; return;
+  var mobileDigits = mobile.replace(/\D/g, "");
+  if(name.length < 2){
+    err.textContent = "Please enter your name."; err.style.display = "block"; return;
   }
+  /* Either one is required, the other is optional. */
+  if(mobileDigits.length < 10 && telegram.length < 3){
+    err.textContent = "Enter your Telegram ID or Mobile number — either one is required, the other is optional."; err.style.display = "block"; return;
+  }
+  if(mobile && mobileDigits.length < 10 && telegram.length < 3){
+    err.textContent = "Please enter a valid 10-digit mobile number, or give your Telegram ID."; err.style.display = "block"; return;
+  }
+  /* A half-typed mobile number is ignored when a valid Telegram ID is given. */
+  if(mobileDigits.length < 10) mobile = "";
+  var contact = mobile || (telegram ? ("@" + telegram) : USER.contact || "");
   err.style.display = "none";
   var c = state.courses.filter(function(x){ return x.id === checkoutCourseId; })[0];
   if(!c) return;
   var ok = $("coOk");
   if(MODE === "live"){
-    var r = await api("order", {method: "POST", token: USER_TOKEN, body: JSON.stringify({courseId: c.id, name: name, email: mail})});
+    var r = await api("order", {method: "POST", token: USER_TOKEN, body: JSON.stringify({courseId: c.id, name: name, mobile: mobile, telegram: telegram})});
+    if(r && r.ok && r.user){ USER.mobile = r.user.mobile || USER.mobile; USER.telegram = r.user.telegram || USER.telegram; }
     if(!r || !r.ok){
       err.textContent = "Order failed: " + ((r && r.error) || "please try again."); err.style.display = "block"; return;
     }
@@ -1317,8 +1343,9 @@ $("coForm").addEventListener("submit", async function(e){
     ok.style.display = "block";
     chime(); toast(r.order && r.order.status === "approved" ? "Free course unlocked!" : "Order placed successfully.");
   } else {
-    var order = {id: uid(), code: "ORD-" + (1000 + (DATA.orders || []).length + 1), courseId: c.id, courseTitle: c.title, name: name, contact: USER.contact, email: mail, userId: USER.id,
+    var order = {id: uid(), code: "ORD-" + (1000 + (DATA.orders || []).length + 1), courseId: c.id, courseTitle: c.title, name: name, contact: contact, mobile: mobile, telegram: telegram, email: (USER.contact && USER.contact.indexOf("@") > 0) ? USER.contact : "", userId: USER.id,
       amount: c.price, status: c.price ? "pending" : "approved", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString()};
+    if(mobile) USER.mobile = mobile; if(telegram) USER.telegram = telegram;
     var raw = RAW.filter(function(x){ return String(x.id) === String(c.id); })[0];
     if(raw){ order.driveUrl = raw.driveUrl || ""; order.telegramChannel = raw.telegramChannel || ""; }
     DATA.orders = DATA.orders || []; DATA.orders.unshift(order); localSave();
@@ -2018,7 +2045,8 @@ function renderOrders(){
     var pillCls = o.status === "Approved" ? "appr" : (o.status === "Rejected" ? "rej" : (o.status === "Cancelled" ? "canc" : "pend"));
     var cc = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0];
     var amt = o.amount || (cc ? Number(cc.price) || 0 : 0);
-    tr.innerHTML = "<td><b>" + esc(o.name) + "</b><br><span style=\"color:var(--muted);font-size:.82rem\">" + esc(o.contact) + (o.mail ? " · " + esc(o.mail) : "") + "<br>" + esc(o.when) + "</span></td>"
+    var contactLine = esc(o.mobile || o.contact || "") + (o.telegram ? " · @" + esc(o.telegram.replace(/^@+/, "")) : "") + (o.mail ? " · " + esc(o.mail) : "");
+    tr.innerHTML = "<td><b>" + esc(o.name) + "</b><br><span style=\"color:var(--muted);font-size:.82rem\">" + contactLine + "<br>" + esc(o.when) + "</span></td>"
       + "<td>" + esc(o.title) + "</td><td>" + (amt ? inr(amt) : "FREE") + "</td>"
       + "<td><span class=\"pill " + pillCls + "\">" + o.status + "</span></td>"
       + "<td><div class=\"row-actions\">"

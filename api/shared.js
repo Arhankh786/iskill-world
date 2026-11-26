@@ -239,7 +239,7 @@ export function checkUserToken(token, users) {
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
   return user;
 }
-export function publicUser(u) { return { id: u.id, name: u.name, contact: u.contact, createdAt: u.createdAt }; }
+export function publicUser(u) { return { id: u.id, name: u.name, contact: u.contact, mobile: u.mobile || "", telegram: u.telegram || "", createdAt: u.createdAt }; }
 export function checkToken(token, session) {
   if (!token || !session || !session.hash) return false;
   if (Date.now() > session.expiresAt) return false;
