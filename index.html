@@ -2369,6 +2369,7 @@ function renderOrders(){
       + (o.hiddenByAdmin
           ? "<button class=\"btn btn-sm\" data-act=\"rs\" data-sound>Restore</button>"
           : "<button class=\"btn btn-sm\" data-act=\"cl\" data-sound>Clear</button>")
+      + "<button class=\"btn btn-sm btn-danger\" data-act=\"rm\" data-sound>Remove</button>"
       + "</div></td>";
     var ap = tr.querySelector("[data-act=\"ap\"]"), rj = tr.querySelector("[data-act=\"rj\"]");
     if(ap) ap.addEventListener("click", async function(){
@@ -2417,6 +2418,29 @@ function renderOrders(){
     if(cl) cl.addEventListener("click", function(){ armConfirm("admin" + o.id, cl, "Clear", function(){ adminHideOrder(o.id); }); });
     var rs = tr.querySelector("[data-act=\"rs\"]");
     if(rs) rs.addEventListener("click", function(){ adminUnhideOrder(o.id); });
+    /* Admin-only permanent removal of one order record (double confirm).
+       Buyers can never do this — they can only hide history. */
+    var rm = tr.querySelector("[data-act=\"rm\"]");
+    if(rm) rm.addEventListener("click", function(){
+      armConfirm("adminRm" + o.id, rm, "Remove", async function(){
+        if(!confirm("Permanently remove this order? If it was approved, the buyer loses access to the course and their rating for it is removed too.")) return;
+        if(MODE === "live"){
+          var r = await api("admin", {method: "POST", body: JSON.stringify({action: "removeOrder", id: o.id})});
+          if(!r || !r.ok){ toast("Remove failed: " + ((r && r.error) || "try again."), true); return; }
+        } else {
+          var oi = (DATA.orders || []).findIndex(function(x){ return String(x.id) === String(o.id); });
+          if(oi > -1){
+            var oo = DATA.orders[oi];
+            DATA.orders.splice(oi, 1);
+            DATA.ratings = (DATA.ratings || []).filter(function(x){ return !(String(x.courseId) === String(oo.courseId) && String(x.userId) === String(oo.userId)); });
+            localSave();
+          }
+          state.orders = DATA.orders.map(normOrder);
+        }
+        await refreshAdminData();
+        toast("Order removed.");
+      });
+    });
     return tr;
   }
 }

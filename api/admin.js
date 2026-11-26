@@ -90,6 +90,20 @@ export default async function handler(req, res) {
       await saveData(data);
       return sendJson(res, { ok: true, cleared });
     }
+    if (action === "removeOrder") {
+      // Admin only: permanently removes ONE order record (e.g. a test or
+      // bogus order). If it was approved, the buyer's access to that
+      // course ends too, and their rating for that course is removed.
+      // Nothing else is touched. This is the ONLY way an order record
+      // is deleted — buyers can only hide history, never delete.
+      const i = data.orders.findIndex((x) => String(x.id) === String(body.id));
+      if (i < 0) return sendErr(res, "Order not found", 404);
+      const o = data.orders[i];
+      data.orders.splice(i, 1);
+      data.ratings = (data.ratings || []).filter((r) => !(String(r.courseId) === String(o.courseId) && String(r.userId) === String(o.userId)));
+      await saveData(data);
+      return sendJson(res, { ok: true, removed: o.code || o.id });
+    }
     if (action === "driveImport") {
       const driveUrl = String(body.driveUrl || "");
       const id = parseDriveId(driveUrl);
