@@ -89,6 +89,22 @@ export default async function handler(req, res) {
       return sendJson(res, { ok: true, course });
     }
     if (action === "listOrders") return sendJson(res, { ok: true, orders: data.orders });
+    // Admin history clearing: hides an order from the ADMIN's list only.
+    // It never deletes the order, never cancels it and never removes the
+    // buyer's course access — the order is still in the data and can be
+    // shown again with unhideOrder. Approve / Reject / Cancel keep
+    // working on hidden orders too (via the cleared-history view).
+    if (action === "hideOrder" || action === "unhideOrder" || action === "hideAllOrders") {
+      if (action === "hideAllOrders") {
+        data.orders.forEach((o) => { o.hiddenByAdmin = true; });
+      } else {
+        const o = data.orders.find((x) => String(x.id) === String(body.id));
+        if (!o) return sendErr(res, "Order not found", 404);
+        o.hiddenByAdmin = action === "hideOrder";
+      }
+      await saveData(data);
+      return sendJson(res, { ok: true });
+    }
     if (action === "approveOrder" || action === "rejectOrder" || action === "cancelOrder") {
       const o = data.orders.find((x) => x.id === body.id);
       if (!o) return sendErr(res, "Order not found", 404);

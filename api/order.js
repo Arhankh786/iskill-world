@@ -2,7 +2,10 @@
 // No public lookup by contact/number any more (that was the privacy hole).
 import { loadData, saveData, ensureData, checkUserToken, bearerToken, newId, cors, sendJson, sendErr, readBody, publicUser } from "./shared.js";
 function mineView(o) {
-  return { id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.status === "approved" ? o.driveUrl : "", telegramChannel: o.status === "approved" ? (o.telegramChannel || "") : "" };
+  // hiddenByBuyer is a per-buyer history flag only: hiding an order never
+  // cancels it and never removes the course from My Courses — the admin
+  // still sees the order and can approve/reject it.
+  return { id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.status === "approved" ? o.driveUrl : "", telegramChannel: o.status === "approved" ? (o.telegramChannel || "") : "", hiddenByBuyer: !!o.hiddenByBuyer };
 }
 export default async function handler(req, res) {
   cors(res);
@@ -13,10 +16,24 @@ export default async function handler(req, res) {
     if (!user) return sendErr(res, "Please login to continue.", 401);
     if (req.method === "GET") {
       const mine = data.orders.filter((o) => String(o.userId) === String(user.id)).map(mineView);
-      return sendJson(res, { ok: true, orders: mine });
+      return sendJson(res, { ok: true, orders: mine, hiddenCount: mine.filter((o) => o.hiddenByBuyer).length });
     }
     if (req.method !== "POST") return sendErr(res, "Method not allowed", 405);
     const body = readBody(req);
+    // History clearing: hides an order from THIS buyer's list only.
+    // It never cancels the order, never touches the admin's copy and
+    // never removes an approved course from My Courses.
+    if (body.action === "hide" || body.action === "unhide" || body.action === "hideAll") {
+      if (body.action === "hideAll") {
+        data.orders.forEach((o) => { if (String(o.userId) === String(user.id)) o.hiddenByBuyer = true; });
+      } else {
+        const o = data.orders.find((x) => String(x.id) === String(body.id) && String(x.userId) === String(user.id));
+        if (!o) return sendErr(res, "Order not found", 404);
+        o.hiddenByBuyer = body.action === "hide";
+      }
+      await saveData(data);
+      return sendJson(res, { ok: true });
+    }
     const course = data.courses.find((c) => c.id === body.courseId);
     if (!course) return sendErr(res, "Course not found", 404);
     // No re-purchase: an approved buyer never buys the same course again.

@@ -305,6 +305,11 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl td{padding:11px 8px;border-bottom:1px solid var(--border);font-weight:500;vertical-align:middle}
 .tbl .row-actions{display:flex;gap:7px;flex-wrap:wrap}
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
+.on-tag{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--accent);color:#fff;letter-spacing:.02em}
+.ord-sec{font-size:15px;font-weight:800;margin:20px 0 2px;color:var(--ink)}
+.ord-sec:first-of-type{margin-top:6px}
+.hist-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hist-tools .btn{margin:0}
 .pill.pend{background:#fff3d6}.pill.appr{background:#dff5e8}.pill.rej{background:#fde3e0}
 body[data-theme="dark"] .pill.pend{background:#3a2f10}body[data-theme="dark"] .pill.appr{background:#123324}body[data-theme="dark"] .pill.rej{background:#3a1512}
 .tbl-scroll{overflow-x:auto}
@@ -541,6 +546,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
           <button class="tab" data-otab="approved" data-sound>Approved</button>
           <button class="tab" data-otab="cancelled" data-sound>Cancelled</button>
         </div>
+        <div id="myOrdersTools" style="margin-top:14px"></div>
         <div id="myOrdersList" style="margin-top:14px"></div>
         <p class="support-line">Need help? <a href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound>Telegram Support @iSkill_Admin</a></p>
       </div>
@@ -697,6 +703,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
         <h3>Orders</h3>
         <p class="sub">Approve an order after payment is confirmed — the buyer then gets the Drive link and the course Telegram channel.</p>
         <div class="field"><select id="orderFilter"><option value="All">All orders</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Cancelled">Cancelled</option></select></div>
+        <div id="adminOrdersTools"></div>
         <div class="tbl-scroll"><table class="tbl"><thead><tr><th>Buyer</th><th>Course</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
       </div>
 
@@ -914,6 +921,7 @@ function normOrder(o){
     mobile: o.mobile || "", telegram: o.telegram || "",
     amount: (o.amount != null ? o.amount : 0), status: label, rawStatus: st,
     drive: o.driveUrl || o.drive || "", telegram: o.telegramChannel || o.telegram || "",
+    hiddenByBuyer: !!o.hiddenByBuyer, hiddenByAdmin: !!o.hiddenByAdmin,
     when: o.createdAt ? new Date(o.createdAt).toLocaleString("en-IN") : (o.when || "")};
 }
 function applyServerData(courses, catNames){
@@ -991,7 +999,7 @@ async function refreshAdminData(){
 }
 
 /* ================= state ================= */
-var state = {categories: [], courses: [], orders: [], filter: "All", editingId: null, uploadedImg: ""};
+var state = {categories: [], courses: [], orders: [], filter: "All", editingId: null, uploadedImg: "", showClearedOrders: false, showClearedAdmin: false};
 var soundOn = true;
 var PURCHASED = {};
 var checkoutCourseId = null;
@@ -1383,7 +1391,7 @@ async function loadMyCourses(){
     list = r.orders || [];
   } else {
     list = (DATA.orders || []).filter(function(o){ return String(o.userId) === String(USER.id); }).map(function(o){
-      return {id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.driveUrl || "", telegramChannel: o.telegramChannel || ""};
+      return {id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.driveUrl || "", telegramChannel: o.telegramChannel || "", hiddenByBuyer: !!o.hiddenByBuyer};
     });
   }
   myOrdersCache = list;
@@ -1391,7 +1399,10 @@ async function loadMyCourses(){
   renderCourses();
   if(!list.length){ out.innerHTML = "<div class=\"empty-box\"><h3>No courses yet</h3><p>You have not bought any course yet. Browse the catalog and place your first order.</p></div>"; return; }
   var ownedList = list.filter(function(o){ return String(o.status || "").toLowerCase() === "approved"; });
-  var restList = list.filter(function(o){ return String(o.status || "").toLowerCase() !== "approved"; });
+  /* Clearing history never removes an owned course: approved orders stay
+     in My Courses even when their history entry is cleared. Pending
+     entries that the buyer cleared are hidden here too. */
+  var restList = list.filter(function(o){ return String(o.status || "").toLowerCase() !== "approved" && !o.hiddenByBuyer; });
   function orderCard(o, isOwnedCard){
     var st = String(o.status || "pending").toLowerCase();
     var label = st.charAt(0).toUpperCase() + st.slice(1);
@@ -1418,31 +1429,131 @@ async function loadMyCourses(){
     + (restList.length ? "<div class=\"mine-rest\">" + restList.map(function(o){ return orderCard(o, false); }).join("") + "</div>" : "");
 }
 function myOrders(){ return loadMyCourses(); }
+/* Two-tap confirm for destructive history buttons (same pattern as
+   Remove course): first tap arms the button, second tap within 5s runs it. */
+var _armClear = {};
+function armConfirm(key, btn, label, fn){
+  var now = Date.now();
+  if(_armClear[key] && now - _armClear[key] < 5000){ delete _armClear[key]; btn.textContent = label; fn(); return; }
+  _armClear[key] = now; btn.textContent = "Tap again to confirm";
+  toast("Tap again to confirm — this only clears your history, nothing else changes.", true);
+  setTimeout(function(){ if(_armClear[key] && Date.now() - _armClear[key] >= 5000){ delete _armClear[key]; if(btn.isConnected) btn.textContent = label; } }, 5000);
+}
+async function hideMyOrder(id){
+  if(MODE === "live"){
+    var r = await api("order", {token: USER_TOKEN, method: "POST", body: JSON.stringify({action: "hide", id: id})});
+    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+  } else {
+    var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
+    if(o){ o.hiddenByBuyer = true; localSave(); }
+  }
+  (myOrdersCache || []).forEach(function(x){ if(String(x.id) === String(id)) x.hiddenByBuyer = true; });
+  loadMyOrders(state.myOrderFilter || "all");
+  toast("Removed from your history. Your course access is unchanged.");
+}
+async function hideAllMyOrders(){
+  if(MODE === "live"){
+    var r = await api("order", {token: USER_TOKEN, method: "POST", body: JSON.stringify({action: "hideAll"})});
+    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+  } else {
+    (DATA.orders || []).forEach(function(x){ if(String(x.userId) === String(USER.id)) x.hiddenByBuyer = true; });
+    localSave();
+  }
+  (myOrdersCache || []).forEach(function(x){ x.hiddenByBuyer = true; });
+  state.showClearedOrders = false;
+  loadMyOrders(state.myOrderFilter || "all");
+  toast("History cleared. Your courses are still yours in My Courses.");
+}
+async function unhideMyOrder(id){
+  if(MODE === "live"){
+    var r = await api("order", {token: USER_TOKEN, method: "POST", body: JSON.stringify({action: "unhide", id: id})});
+    if(!r || !r.ok){ toast("Could not restore: " + ((r && r.error) || "try again."), true); return; }
+  } else {
+    var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
+    if(o){ o.hiddenByBuyer = false; localSave(); }
+  }
+  (myOrdersCache || []).forEach(function(x){ if(String(x.id) === String(id)) x.hiddenByBuyer = false; });
+  loadMyOrders(state.myOrderFilter || "all");
+  toast("Order restored to your history.");
+}
 async function loadMyOrders(filter){
   state.myOrderFilter = filter || state.myOrderFilter || "all";
-  var prompt = $("ordersLoginPrompt"), content = $("ordersContent"), listEl = $("myOrdersList");
+  var prompt = $("ordersLoginPrompt"), content = $("ordersContent"), listEl = $("myOrdersList"), toolsEl = $("myOrdersTools");
   if(!USER){ if(prompt) prompt.style.display = "block"; if(content) content.style.display = "none"; return; }
   if(prompt) prompt.style.display = "none"; if(content) content.style.display = "block";
   if(!myOrdersCache){ await loadMyCourses(); }
-  var list = myOrdersCache || [];
+  var all = myOrdersCache || [];
   document.querySelectorAll("#myOrderTabs .tab").forEach(function(t2){ t2.classList.toggle("active", t2.getAttribute("data-otab") === state.myOrderFilter); });
   var f = state.myOrderFilter;
-  var shown = list.filter(function(o){
+  var hiddenCount = all.filter(function(o){ return o.hiddenByBuyer; }).length;
+  /* History tools: clear one by one (on each card) or clear all at once.
+     Clearing only hides the entry from the buyer's list — a pending order
+     is NOT cancelled and an approved course stays owned in My Courses. */
+  if(toolsEl){
+    toolsEl.innerHTML = "";
+    if(state.showClearedOrders){
+      var back = document.createElement("button"); back.className = "btn btn-sm"; back.textContent = "\u2190 Back to orders"; back.setAttribute("data-sound", "");
+      back.addEventListener("click", function(){ state.showClearedOrders = false; loadMyOrders(state.myOrderFilter); });
+      toolsEl.appendChild(back);
+    } else {
+      if(all.length){
+        var clr = document.createElement("button"); clr.className = "btn btn-sm btn-danger"; clr.textContent = "Clear all history"; clr.setAttribute("data-sound", "");
+        clr.addEventListener("click", function(){ armConfirm("all", clr, "Clear all history", function(){ hideAllMyOrders(); }); });
+        toolsEl.appendChild(clr);
+      }
+      if(hiddenCount){
+        var sh = document.createElement("button"); sh.className = "btn btn-sm"; sh.textContent = "Show cleared history (" + hiddenCount + ")"; sh.setAttribute("data-sound", "");
+        sh.addEventListener("click", function(){ state.showClearedOrders = true; loadMyOrders(state.myOrderFilter); });
+        toolsEl.appendChild(sh);
+      }
+    }
+    if(toolsEl.children.length) toolsEl.classList.add("hist-tools"); else toolsEl.classList.remove("hist-tools");
+  }
+  var visible = state.showClearedOrders ? all.filter(function(o){ return o.hiddenByBuyer; }) : all.filter(function(o){ return !o.hiddenByBuyer; });
+  var shown = visible.filter(function(o){
     var st = String(o.status || "").toLowerCase();
     if(f === "all") return true;
     if(f === "cancelled") return st === "cancelled" || st === "rejected";
     return st === f;
   });
-  if(!shown.length){ listEl.innerHTML = "<div class=\"empty-box\"><p>No " + (f === "all" ? "orders" : f) + " orders yet.</p></div>"; return; }
-  listEl.innerHTML = shown.map(function(o){
+  if(!shown.length){ listEl.innerHTML = "<div class=\"empty-box\"><p>" + (state.showClearedOrders ? "No cleared orders." : "No " + (f === "all" ? "orders" : f) + " orders yet.") + "</p></div>"; return; }
+  function orderRow(o){
     var st = String(o.status || "pending").toLowerCase();
     var label = st.charAt(0).toUpperCase() + st.slice(1);
     var cls = st === "approved" ? "appr" : ((st === "rejected" || st === "cancelled") ? "canc" : "pend");
     var cc = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0];
     var amt = (o.amount != null && o.amount !== "") ? Number(o.amount) : (cc ? Number(cc.price) || 0 : 0);
-    return "<div class=\"mine-order\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:flex-start\"><b>" + esc(o.courseTitle || "") + "</b><span class=\"pill " + cls + "\">" + label.toUpperCase() + "</span></div>"
-      + "<div class=\"hint\">" + esc(o.code || "") + " \u00b7 " + (amt ? inr(amt) : "Free") + (o.createdAt ? " \u00b7 " + esc(new Date(o.createdAt).toLocaleDateString("en-IN")) : "") + "</div></div>";
-  }).join("");
+    /* Pending orders carry an "On" tag — never Reject / Cancel. */
+    var tag = st === "pending" ? " <span class=\"on-tag\">On</span>" : "";
+    var row = "<div class=\"mine-order\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:flex-start\"><b>" + esc(o.courseTitle || "") + "</b><span style=\"display:flex;gap:6px;align-items:center;flex-shrink:0\"><span class=\"pill " + cls + "\">" + label.toUpperCase() + "</span>" + tag + "</span></div>"
+      + "<div class=\"hint\">" + esc(o.code || "") + " \u00b7 " + (amt ? inr(amt) : "Free") + (o.createdAt ? " \u00b7 " + esc(new Date(o.createdAt).toLocaleDateString("en-IN")) : "") + "</div>"
+      + "<div style=\"margin-top:8px;display:flex;gap:8px\">"
+      + (o.hiddenByBuyer
+          ? "<button class=\"btn btn-sm\" data-restore=\"" + esc(o.id) + "\" data-sound>Restore</button>"
+          : "<button class=\"btn btn-sm\" data-clear=\"" + esc(o.id) + "\" data-sound>Clear</button>")
+      + "</div></div>";
+    return row;
+  }
+  function bindRowButtons(){
+    listEl.querySelectorAll("[data-clear]").forEach(function(b){
+      b.addEventListener("click", function(){ armConfirm("o" + b.getAttribute("data-clear"), b, "Clear", function(){ hideMyOrder(b.getAttribute("data-clear")); }); });
+    });
+    listEl.querySelectorAll("[data-restore]").forEach(function(b){
+      b.addEventListener("click", function(){ unhideMyOrder(b.getAttribute("data-restore")); });
+    });
+  }
+  /* Sections: not-yet-approved ("On") orders on TOP, approved courses in
+     their own separate section below, cancelled/rejected last. The tabs
+     still filter which sections are shown. */
+  var pend = shown.filter(function(o){ return String(o.status || "").toLowerCase() === "pending"; });
+  var appr = shown.filter(function(o){ return String(o.status || "").toLowerCase() === "approved"; });
+  var done = shown.filter(function(o){ var s = String(o.status || "").toLowerCase(); return s === "cancelled" || s === "rejected"; });
+  var h = "";
+  if(pend.length) h += "<h3 class=\"ord-sec\">Waiting for approval</h3>" + pend.map(orderRow).join("");
+  if(appr.length) h += "<h3 class=\"ord-sec\">Approved</h3>" + appr.map(orderRow).join("");
+  if(done.length) h += "<h3 class=\"ord-sec\">Cancelled / Rejected</h3>" + done.map(orderRow).join("");
+  listEl.innerHTML = h;
+  bindRowButtons();
 }
 
 /* ================= views, drawer, bottom nav ================= */
@@ -2034,25 +2145,104 @@ async function removeCourse(id){
   toast("Course removed: “" + c.title + "”");
 }
 
+/* Admin history clearing: hides an order from the admin list only — it
+   never deletes the order, never cancels it and never removes the
+   buyer's course access. Hidden orders can be shown again (Restore)
+   and Approve / Reject / Cancel keep working on them. */
+async function adminHideOrder(id){
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "hideOrder", id: id})});
+    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+  } else {
+    var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
+    if(o){ o.hiddenByAdmin = true; localSave(); }
+  }
+  await refreshAdminData();
+  toast("Removed from the admin history list. The order itself is untouched.");
+}
+async function adminHideAllOrders(){
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "hideAllOrders"})});
+    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+  } else {
+    (DATA.orders || []).forEach(function(x){ x.hiddenByAdmin = true; });
+    localSave();
+  }
+  state.showClearedAdmin = false;
+  await refreshAdminData();
+  toast("Admin history cleared. Orders and buyer access are unchanged.");
+}
+async function adminUnhideOrder(id){
+  if(MODE === "live"){
+    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "unhideOrder", id: id})});
+    if(!r || !r.ok){ toast("Could not restore: " + ((r && r.error) || "try again."), true); return; }
+  } else {
+    var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
+    if(o){ o.hiddenByAdmin = false; localSave(); }
+  }
+  await refreshAdminData();
+  toast("Order restored to the admin list.");
+}
+
 /* orders */
 function renderOrders(){
   var tb = $("ordersBody"); tb.innerHTML = "";
+  var toolsEl = $("adminOrdersTools");
   var f = ($("orderFilter") && $("orderFilter").value) || "All";
-  var list = state.orders.filter(function(o){ return f === "All" || o.status === f; });
-  if(!list.length){ tb.innerHTML = "<tr><td colspan=\"5\">No orders yet. Orders placed on the store will appear here.</td></tr>"; return; }
-  list.forEach(function(o){
+  var hiddenCount = state.orders.filter(function(o){ return o.hiddenByAdmin; }).length;
+  if(toolsEl){
+    toolsEl.innerHTML = "";
+    if(state.showClearedAdmin){
+      var back = document.createElement("button"); back.className = "btn btn-sm"; back.textContent = "\u2190 Back to orders"; back.setAttribute("data-sound", "");
+      back.addEventListener("click", function(){ state.showClearedAdmin = false; renderOrders(); });
+      toolsEl.appendChild(back);
+    } else {
+      if(state.orders.length){
+        var clr = document.createElement("button"); clr.className = "btn btn-sm btn-danger"; clr.textContent = "Clear all history"; clr.setAttribute("data-sound", "");
+        clr.addEventListener("click", function(){ armConfirm("adminAll", clr, "Clear all history", function(){ adminHideAllOrders(); }); });
+        toolsEl.appendChild(clr);
+      }
+      if(hiddenCount){
+        var sh = document.createElement("button"); sh.className = "btn btn-sm"; sh.textContent = "Show cleared history (" + hiddenCount + ")"; sh.setAttribute("data-sound", "");
+        sh.addEventListener("click", function(){ state.showClearedAdmin = true; renderOrders(); });
+        toolsEl.appendChild(sh);
+      }
+    }
+    if(toolsEl.children.length) toolsEl.classList.add("hist-tools"); else toolsEl.classList.remove("hist-tools");
+  }
+  var list = state.orders.filter(function(o){ return (f === "All" || o.status === f) && (state.showClearedAdmin ? o.hiddenByAdmin : !o.hiddenByAdmin); });
+  if(!list.length){ tb.innerHTML = "<tr><td colspan=\"5\">" + (state.showClearedAdmin ? "No cleared orders." : "No orders yet. Orders placed on the store will appear here.") + "</td></tr>"; return; }
+  /* Same layout as My Orders: not-yet-approved ("On") orders on TOP,
+     approved in their own section below, cancelled/rejected last. */
+  var sections = [
+    {title: "Waiting for approval", rows: list.filter(function(o){ return o.status === "Pending"; })},
+    {title: "Approved", rows: list.filter(function(o){ return o.status === "Approved"; })},
+    {title: "Cancelled / Rejected", rows: list.filter(function(o){ return o.status === "Cancelled" || o.status === "Rejected"; })}
+  ];
+  sections.forEach(function(sec){
+    if(!sec.rows.length) return;
+    var hr = document.createElement("tr");
+    hr.innerHTML = "<td colspan=\"5\" style=\"background:var(--surface2);font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)\">" + sec.title + "</td>";
+    tb.appendChild(hr);
+    sec.rows.forEach(function(o){ tb.appendChild(orderRow(o)); });
+  });
+  function orderRow(o){
     var tr = document.createElement("tr");
     var pillCls = o.status === "Approved" ? "appr" : (o.status === "Rejected" ? "rej" : (o.status === "Cancelled" ? "canc" : "pend"));
     var cc = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0];
     var amt = o.amount || (cc ? Number(cc.price) || 0 : 0);
     var contactLine = esc(o.mobile || o.contact || "") + (o.telegram ? " · @" + esc(o.telegram.replace(/^@+/, "")) : "") + (o.mail ? " · " + esc(o.mail) : "");
+    var onTag = o.status === "Pending" ? " <span class=\"on-tag\">On</span>" : "";
     tr.innerHTML = "<td><b>" + esc(o.name) + "</b><br><span style=\"color:var(--muted);font-size:.82rem\">" + contactLine + "<br>" + esc(o.when) + "</span></td>"
       + "<td>" + esc(o.title) + "</td><td>" + (amt ? inr(amt) : "FREE") + "</td>"
-      + "<td><span class=\"pill " + pillCls + "\">" + o.status + "</span></td>"
+      + "<td><span class=\"pill " + pillCls + "\">" + o.status + "</span>" + onTag + "</td>"
       + "<td><div class=\"row-actions\">"
       + (o.status !== "Approved" && o.status !== "Cancelled" ? "<button class=\"btn btn-sm btn-orange\" data-act=\"ap\" data-sound>Approve</button>" : "")
       + (o.status !== "Rejected" && o.status !== "Cancelled" ? "<button class=\"btn btn-sm\" data-act=\"rj\" data-sound>Reject</button>" : "")
       + (o.status !== "Cancelled" ? "<button class=\"btn btn-sm btn-danger\" data-act=\"cx\" data-sound>Cancel</button>" : "")
+      + (o.hiddenByAdmin
+          ? "<button class=\"btn btn-sm\" data-act=\"rs\" data-sound>Restore</button>"
+          : "<button class=\"btn btn-sm\" data-act=\"cl\" data-sound>Clear</button>")
       + "</div></td>";
     var ap = tr.querySelector("[data-act=\"ap\"]"), rj = tr.querySelector("[data-act=\"rj\"]");
     if(ap) ap.addEventListener("click", async function(){
@@ -2097,8 +2287,12 @@ function renderOrders(){
       await refreshAdminData();
       toast("Order cancelled.", true);
     });
-    tb.appendChild(tr);
-  });
+    var cl = tr.querySelector("[data-act=\"cl\"]");
+    if(cl) cl.addEventListener("click", function(){ armConfirm("admin" + o.id, cl, "Clear", function(){ adminHideOrder(o.id); }); });
+    var rs = tr.querySelector("[data-act=\"rs\"]");
+    if(rs) rs.addEventListener("click", function(){ adminUnhideOrder(o.id); });
+    return tr;
+  }
 }
 function renderStats(){
   $("stCourses").textContent = state.courses.length;
