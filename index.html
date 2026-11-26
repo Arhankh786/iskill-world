@@ -92,7 +92,8 @@ header.site{position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:
 .hero-card .hc-cover{height:176px;border-radius:26px 26px 0 0;overflow:hidden;position:relative}
 @media(min-width:640px){.hero-card .hc-cover{height:208px}}
 .hc-grad{position:relative;width:100%;height:100%}
-.hc-mono{position:absolute;top:16px;left:16px;width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,.85);display:grid;place-items:center;font-size:24px;font-weight:800;color:#141414}
+.hc-ic{position:absolute;top:16px;left:16px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;color:#141414;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.hc-ic svg{width:32px;height:32px}
 .hc-catpill{position:absolute;left:16px;bottom:16px;background:rgba(0,0,0,.7);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px}
 .hero-card .hc-body{padding:20px}
 .hero-card h2{margin:0;font-size:20px;font-weight:800;line-height:1.3}
@@ -219,12 +220,12 @@ section.block{margin-top:48px}
 @media(min-width:640px){.tg-band h2{font-size:30px}}
 .tg-band p{margin:8px auto 0;color:rgba(255,255,255,.7);font-size:14px;max-width:448px;line-height:1.6}
 .tg-band .btn{margin-top:20px;border-radius:12px;padding:12px 24px;font-size:16px}
-.tg-float{position:fixed;bottom:20px;right:20px;z-index:40;width:56px;height:56px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 10px 24px rgba(255,149,0,.5);text-decoration:none}
+.tg-float{position:fixed;bottom:20px;right:20px;z-index:40;width:48px;height:48px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 10px 24px rgba(255,149,0,.5);text-decoration:none;transition:opacity .3s ease,transform .3s ease}
 .tg-float svg{width:24px;height:24px;color:#000}
 .tg-float::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);animation:pulseRing 2.8s ease-out infinite}
 
 /* ---------- footer ---------- */
-footer.site{margin-top:56px;border-top:1px solid var(--border);padding:24px 0 8px;text-align:center}
+footer.site{margin-top:56px;border-top:1px solid var(--border);padding:24px 0 calc(112px + env(safe-area-inset-bottom));text-align:center}
 .foot-logo{display:inline-block;background:#000;border-radius:16px;padding:12px 20px;box-shadow:0 0 0 1px rgba(0,0,0,.1)}
 .foot-logo img{height:48px;width:auto}
 footer.site p{font-size:14px;color:var(--dim);max-width:448px;margin:6px auto 0;line-height:1.6}
@@ -232,13 +233,19 @@ footer.site .btn{margin-top:12px;border-radius:999px;padding:10px 16px;font-size
 .foot-copy{font-size:12px;color:var(--dim);margin-top:20px}
 
 /* ---------- modal ---------- */
-.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);z-index:50;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);z-index:70;display:none;align-items:flex-end;justify-content:center;padding:0}
 .modal-back.open{display:flex}
 .modal{background:var(--surface);width:100%;max-width:512px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;animation:riseIn .55s cubic-bezier(.22,1,.36,1) both}
 @media(min-width:640px){.modal-back{align-items:center;padding:20px}.modal{border-radius:24px}}
 .modal .m-cover{height:208px;overflow:hidden;background:var(--surface2)}
 .modal .m-cover img,.modal .m-cover svg.art{width:100%;height:100%;object-fit:cover}
-.modal .m-body{padding:20px 20px 24px}
+.modal .m-body{padding:20px 20px calc(48px + env(safe-area-inset-bottom))}
+/* while a sheet/modal is open the bottom nav + Telegram button hide so the
+   sheet's last button is never covered and can be scrolled fully into view */
+body.modal-open .bottom-nav,body.modal-open .tg-float{display:none}
+/* the floating Telegram button fades out while scrolling so it never covers
+   a card button, and comes back shortly after scrolling stops */
+body.fab-hidden .tg-float{opacity:0;pointer-events:none;transform:scale(.85)}
 .modal h3{font-size:24px;font-weight:700;margin:6px 0 8px;letter-spacing:-.01em}
 .modal .m-desc{color:var(--dim);line-height:1.65;font-weight:400;font-size:14px}
 .modal-wrap{position:relative}
@@ -262,7 +269,7 @@ body[data-theme="dark"] .form-ok{background:#123324;color:#9fe8c0}
 #adminView{display:none}
 body.admin-mode #storefront,body.admin-mode footer.site,body.admin-mode .tg-float{display:none}
 body.admin-mode #adminView{display:block}
-.admin-shell{max-width:1060px;margin:0 auto;padding:28px 16px 70px}
+.admin-shell{max-width:1060px;margin:0 auto;padding:28px 16px calc(130px + env(safe-area-inset-bottom))}
 .pin-card{max-width:420px;margin:7vh auto 0;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 14px 30px rgba(20,20,20,.12);padding:30px 28px;text-align:center}
 .pin-card h2{margin:10px 0 6px;font-size:22px}
 .pin-card p{color:var(--dim);font-weight:400;font-size:14px;line-height:1.55;margin:0 0 18px}
@@ -331,8 +338,8 @@ body[data-theme="dark"] .pill.pend{background:#3a2f10}body[data-theme="dark"] .p
 .bn-item .bn-ic{display:flex;line-height:0}
 .bn-item.active{color:var(--accent)}
 body.admin-mode .bottom-nav,body.admin-mode .drawer,body.admin-mode .drawer-back{display:none}
-main,#storefront{padding-bottom:120px}
-.tg-float{bottom:84px}
+main,#storefront{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+.tg-float{bottom:92px}
 .pill.canc{background:#fde3e0}
 body[data-theme="dark"] .pill.canc{background:#3a1512}
 
@@ -1025,36 +1032,38 @@ document.addEventListener("mouseover", function(e){
 
 /* ================= cover art ================= */
 var GRADIENTS = [
-  ["#fff1d6", "#ffb020"], ["#ffe8c2", "#ff9500"], ["#f7f7f7", "#d9d9d9"],
-  ["#ffe9c9", "#ff9e2c"], ["#fff6e9", "#ffc46b"], ["#f2f2f2", "#c9c9c9"],
-  ["#ffedd1", "#ffa726"], ["#fff3dc", "#ff8c00"]
+  ["#ffc46b", "#ff8c00"], ["#ffb020", "#ff9500"], ["#ff9e2c", "#f97316"],
+  ["#ffd08a", "#ff9500"], ["#ffb84d", "#ff7a00"], ["#ffcf7d", "#ff9500"]
 ];
-function monogram(title){
-  var words = String(title || "").split(" ").filter(Boolean);
-  var a = words[0] ? words[0].charAt(0) : "i";
-  var b = words[1] ? words[1].charAt(0) : "S";
-  return (a + b).toUpperCase();
-}
+function catOf(course){ return course.cat || course.category || ""; }
+/* Strip leading emoji / symbols from a title (e.g. "✅ How to Earn..." -> "How to Earn...") */
+function cleanTitle(title){ return String(title || "").replace(/^[^\p{L}\p{N}]+/u, ""); }
 function gradFor(course){
   var h = 0, s = String(course.id || course.title || "");
   for(var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 997;
   return GRADIENTS[h % GRADIENTS.length];
 }
+/* Clean designed placeholder for courses with no cover photo: a smooth
+   orange gradient with the category's Lucide icon in a white circle and the
+   category name below it. No giant letters, no emoji — the course title is
+   never rendered inside the thumbnail area. */
 function artSVG(course){
   var g = gradFor(course);
-  return "<svg class=\"art\" viewBox=\"0 0 400 225\" preserveAspectRatio=\"xMidYMid slice\" role=\"img\" aria-label=\"" + esc(course.title) + " cover art\">"
+  var cat = catOf(course);
+  var icon = (typeof CAT_ICONS !== "undefined" && CAT_ICONS[cat]) || "<path d=\"M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z\"/><path d=\"M8 8h8M8 12h5\"/>";
+  return "<svg class=\"art\" viewBox=\"0 0 400 225\" preserveAspectRatio=\"xMidYMid slice\" role=\"img\" aria-label=\"" + esc(cleanTitle(course.title)) + " cover art\">"
     + "<defs><linearGradient id=\"g" + course.id + "\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"" + g[0] + "\"/><stop offset=\"1\" stop-color=\"" + g[1] + "\"/></linearGradient></defs>"
     + "<rect width=\"400\" height=\"225\" fill=\"url(#g" + course.id + ")\"/>"
-    + "<text x=\"200\" y=\"118\" text-anchor=\"middle\" font-family=\"Poppins, sans-serif\" font-weight=\"800\" font-size=\"48\" fill=\"#141414\" fill-opacity=\"0.75\">" + esc(monogram(course.title)) + "</text>"
-    + "<text x=\"200\" y=\"152\" text-anchor=\"middle\" font-family=\"Poppins, sans-serif\" font-weight=\"700\" font-size=\"11\" letter-spacing=\"3\" fill=\"#141414\" fill-opacity=\"0.75\">" + esc((course.cat || "").toUpperCase()) + "</text>"
-    + "<rect y=\"185\" width=\"400\" height=\"40\" fill=\"#000\" fill-opacity=\"0.10\"/>"
+    + "<circle cx=\"200\" cy=\"102\" r=\"46\" fill=\"rgba(255,255,255,0.94)\"/>"
+    + "<g transform=\"translate(162,64) scale(3.1667)\" fill=\"none\" stroke=\"#141414\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\">" + icon + "</g>"
+    + "<text x=\"200\" y=\"186\" text-anchor=\"middle\" font-family=\"Poppins, sans-serif\" font-weight=\"700\" font-size=\"12\" letter-spacing=\"3\" fill=\"#141414\" fill-opacity=\"0.85\">" + esc(cat.toUpperCase()) + "</text>"
     + "</svg>";
 }
 function heroCoverHTML(course){
   var g = gradFor(course);
   return "<div class=\"hc-grad\" style=\"background:linear-gradient(135deg," + g[0] + "," + g[1] + ")\">"
-    + "<span class=\"hc-mono\">" + esc(monogram(course.title)) + "</span>"
-    + "<span class=\"hc-catpill\">" + esc((course.cat || "").toUpperCase()) + "</span></div>";
+    + "<span class=\"hc-ic\">" + catIcon(catOf(course)) + "</span>"
+    + "<span class=\"hc-catpill\">" + esc(catOf(course).toUpperCase()) + "</span></div>";
 }
 function coverHTML(course){
   if(course.cover) return "<img src=\"" + esc(course.cover) + "\" alt=\"" + esc(course.title) + " cover\" onerror=\"this.outerHTML = window.__artFallback(this)\" data-art-for=\"" + course.id + "\">";
@@ -1175,14 +1184,26 @@ var heroStartBtn = $("heroStartBtn");
 if(heroStartBtn) heroStartBtn.addEventListener("click", function(e){ e.preventDefault(); var c = featuredCourse(); if(c) openDetail(c.id); });
 
 /* ================= modals ================= */
-function openModal(id){ $(id).classList.add("open"); swoosh(); }
-function closeModal(id){ $(id).classList.remove("open"); blip(420); }
+function syncModalChrome(){
+  var anyOpen = !!document.querySelector(".modal-back.open");
+  document.body.classList.toggle("modal-open", anyOpen);
+}
+function openModal(id){ $(id).classList.add("open"); syncModalChrome(); swoosh(); }
+function closeModal(id){ $(id).classList.remove("open"); syncModalChrome(); blip(420); }
 document.querySelectorAll("[data-close]").forEach(function(b){
-  b.addEventListener("click", function(){ b.closest(".modal-back").classList.remove("open"); });
+  b.addEventListener("click", function(){ b.closest(".modal-back").classList.remove("open"); syncModalChrome(); });
 });
 document.querySelectorAll(".modal-back").forEach(function(m){
-  m.addEventListener("click", function(e){ if(e.target === m) m.classList.remove("open"); });
+  m.addEventListener("click", function(e){ if(e.target === m){ m.classList.remove("open"); syncModalChrome(); } });
 });
+/* Floating Telegram button: fade out while the user scrolls so it never
+   covers a card button, and fade back in shortly after scrolling stops. */
+var fabTimer = null;
+window.addEventListener("scroll", function(){
+  document.body.classList.add("fab-hidden");
+  if(fabTimer) clearTimeout(fabTimer);
+  fabTimer = setTimeout(function(){ document.body.classList.remove("fab-hidden"); }, 1200);
+}, {passive:true});
 function approvedOrder(courseId){
   return state.orders.filter(function(o){ return o.courseId === courseId && o.status === "Approved"; })[0];
 }
