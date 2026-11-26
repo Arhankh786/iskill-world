@@ -57,6 +57,7 @@ export function ensureData(data) {
   if (!Array.isArray(data.users)) data.users = [];
   if (!Array.isArray(data.orders)) data.orders = [];
   if (!Array.isArray(data.ratings)) data.ratings = [];
+  if (data._seq == null) data._seq = 0;
   if (!Array.isArray(data.courses)) data.courses = [];
   // Fake seeded ratings / student counts are never shown any more: wipe
   // them from stored courses so only real numbers can ever appear.
@@ -93,22 +94,51 @@ export async function loadData(opts) {
     // before giving up. NEVER seed-overwrite here: if the list comes back
     // empty transiently, wiping Blob with a fresh seed would delete the
     // PIN, users, courses and orders.
+    //
+    // Two extra guards (live-proven 2026-11-27: rapid writes forked the
+    // data — a rating vanished, a hide flag read back false, a deleted
+    // account's order survived — because reads flapped between keys):
+    // 1. Newest-first is by (uploadedAt, KEY NAME). The key name embeds
+    //    a millisecond timestamp, so it orders reliably even when
+    //    uploadedAt is missing or ties — sorting by uploadedAt alone
+    //    made reads flap between divergent keys.
+    // 2. opts.settle (mutating handlers): list a few times with gaps and
+    //    only proceed once the newest key is stable, so a save is never
+    //    based on a list that has not seen the previous write yet.
+    // 3. A _seq marker on the data: if this warm instance last saved a
+    //    NEWER seq than the key we just fetched, the fetch is stale and
+    //    the in-memory copy wins.
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const blob = await blobApi(); if (!blob) throw new Error("no blob package");
-        const { blobs } = await blob.list({ prefix: DATA_PREFIX, limit: 100 });
-        const list = blobs || [];
-        // Newest versioned key first — sorted by uploadedAt OURSELVES,
-        // because `list` does not guarantee newest-first order (relying on
-        // its order made reads return the OLDEST version forever: logins
-        // failed, orders duplicated, deletes never stuck).
-        const versioned = list.filter((b) => VERSIONED_KEY.test(b.pathname || ""));
-        versioned.sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
-        const legacy = list.find((b) => (b.pathname || "") === DATA_KEY);
-        // Try candidates newest-first; only fall back to the legacy single
-        // "data.json" key (pre-versioning) when no versioned key exists.
-        const candidates = versioned.length ? versioned.slice(0, 5) : (legacy ? [legacy] : []);
+        const settleRounds = opts.settle ? 3 : 1;
+        let candidates = [];
+        let prevTop = "";
+        for (let round = 0; round < settleRounds; round++) {
+          const { blobs } = await blob.list({ prefix: DATA_PREFIX, limit: 100 });
+          const list = blobs || [];
+          const versioned = list.filter((b) => VERSIONED_KEY.test(b.pathname || ""));
+          versioned.sort((a, b) => {
+            const t = new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0);
+            if (t) return t;
+            return String(b.pathname || "").localeCompare(String(a.pathname || ""));
+          });
+          const legacy = list.find((b) => (b.pathname || "") === DATA_KEY);
+          const roundCands = versioned.length ? versioned.slice(0, 5) : (legacy ? [legacy] : []);
+          const seen = new Set(candidates.map((c) => c.pathname));
+          roundCands.forEach((c) => { if (!seen.has(c.pathname)) { candidates.push(c); seen.add(c.pathname); } });
+          candidates.sort((a, b) => {
+            const t = new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0);
+            if (t) return t;
+            return String(b.pathname || "").localeCompare(String(a.pathname || ""));
+          });
+          if (!opts.settle) break;
+          const top = candidates.length ? candidates[0].pathname : "";
+          if (round > 0 && top === prevTop) break;
+          prevTop = top;
+          if (round < settleRounds - 1) await new Promise((res) => setTimeout(res, 700));
+        }
         let loaded = null;
         for (const cand of candidates) {
           try {
@@ -117,7 +147,12 @@ export async function loadData(opts) {
             if (data && Array.isArray(data.courses)) { loaded = data; break; }
           } catch (e) { /* try the next candidate */ }
         }
-        if (loaded) { memoryData = ensureData(loaded); return memoryData; }
+        if (loaded) {
+          if (memoryData && Array.isArray(memoryData.courses) && (Number(memoryData._seq) || 0) > (Number(loaded._seq) || 0)) {
+            return ensureData(memoryData);
+          }
+          memoryData = ensureData(loaded); return memoryData;
+        }
         lastErr = new Error(candidates.length ? "bad data in blob" : "data.json not listed yet");
       } catch (e) { lastErr = e; }
       if (attempt < 2) await new Promise((res) => setTimeout(res, attempt === 0 ? 500 : 1200));
@@ -147,10 +182,14 @@ export async function loadData(opts) {
 // instance/phone is found even while Blob is still propagating.
 export async function reloadFresh() {
   memoryData = null;
-  return loadData({ forceFresh: true });
+  return loadData({ forceFresh: true, settle: true });
 }
 
 export async function saveData(data) {
+  // Monotonic marker: lets a warm instance tell a stale Blob read from a
+  // fresh one (see loadData guard 3).
+  data._seq = (Number(data._seq) || 0) + 1;
+  data._savedAt = Date.now();
   memoryData = data;
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {

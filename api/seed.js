@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).end();
   try {
-    const data = await loadData();
+    const data = await loadData({ settle: true });
     if (req.method === "GET") return sendJson(res, { ok: true, seeded: true, courses: data.courses.length, categories: data.categories.length, orders: data.orders.length });
     if (req.method === "POST") {
       const body = readBody(req);

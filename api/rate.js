@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).end();
   try {
-    const data = ensureData(await loadData());
+    const data = ensureData(await loadData({ settle: true }));
     if (req.method === "GET") {
       const courseId = (req.query && req.query.courseId) || "";
       const course = data.courses.find((c) => String(c.id) === String(courseId));

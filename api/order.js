@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).end();
   try {
-    const data = ensureData(await loadData());
+    const data = ensureData(await loadData({ settle: true }));
     const user = checkUserToken(bearerToken(req), data.users);
     if (!user) return sendErr(res, "Please login to continue.", 401);
     if (req.method === "GET") {
