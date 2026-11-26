@@ -702,6 +702,12 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
             </div>
           </form>
         </div>
+        <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;margin-bottom:16px">
+          <h3 style="font-size:18px">Restore sample courses</h3>
+          <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">If the catalog is ever empty, this brings back the 8 sample courses and categories. Orders, buyers, your admin PIN and settings are not touched.</p>
+          <div class="form-ok" id="seedOk"></div>
+          <button class="btn btn-orange" id="restoreSeedBtn" type="button" data-sound>Restore sample courses</button>
+        </div>
         <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px">
           <h3 style="font-size:18px">Change PIN</h3>
           <form id="pinChangeForm" style="max-width:420px;margin-top:12px">
@@ -1915,6 +1921,27 @@ var _tg = $("tgForm"); if(_tg) _tg.addEventListener("submit", async function(e){
   }
   var ok = $("tgOk"); if(ok){ ok.textContent = "Telegram link saved — live on the store now."; ok.style.display = "block"; }
   toast("Telegram link saved.");
+});
+
+/* restore sample courses — re-seeds categories + courses only, keeps orders, PIN and users */
+var _rs = $("restoreSeedBtn"); if(_rs) _rs.addEventListener("click", async function(){
+  if(!confirm("Restore the 8 sample courses? Orders, buyers and your PIN are not touched.")) return;
+  _rs.disabled = true; _rs.textContent = "Restoring…";
+  try{
+    if(MODE === "live"){
+      var r = await api("seed", {method: "POST", body: JSON.stringify({force: true})});
+      if(!r || !r.ok){ toast("Restore failed: " + ((r && r.error) || "try again."), true); return; }
+      await loadCatalog(); await refreshAdminData();
+      var n = (r.courses != null ? r.courses : (state.courses || []).length);
+      var ok = $("seedOk"); if(ok){ ok.textContent = n + " sample courses restored."; ok.style.display = "block"; }
+      toast(n + " sample courses restored.");
+    } else {
+      var s = seedLocal(); DATA.categories = s.categories; DATA.courses = s.courses; localSave();
+      applyServerData(DATA.courses, DATA.categories); renderAll(); setHeroCover();
+      var ok2 = $("seedOk"); if(ok2){ ok2.textContent = DATA.courses.length + " sample courses restored."; ok2.style.display = "block"; }
+      toast(DATA.courses.length + " sample courses restored.");
+    }
+  } finally { _rs.disabled = false; _rs.textContent = "Restore sample courses"; }
 });
 
 /* ================= init ================= */
