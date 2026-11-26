@@ -84,17 +84,26 @@ export async function loadData(opts) {
         const blob = await blobApi(); if (!blob) throw new Error("no blob package");
         const { blobs } = await blob.list({ prefix: DATA_PREFIX, limit: 100 });
         const list = blobs || [];
-        // Newest versioned key first (list comes back newest-first);
-        // fall back to the legacy single "data.json" key (pre-versioning).
-        const newest = list.find((b) => VERSIONED_KEY.test(b.pathname || "")) || list.find((b) => (b.pathname || "") === DATA_KEY);
-        if (newest) {
-          const r = await fetch(newest.url + (newest.url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
-          const data = await r.json();
-          if (data && Array.isArray(data.courses)) { memoryData = ensureData(data); return memoryData; }
-          lastErr = new Error("bad data in blob");
-        } else {
-          lastErr = new Error("data.json not listed yet");
+        // Newest versioned key first — sorted by uploadedAt OURSELVES,
+        // because `list` does not guarantee newest-first order (relying on
+        // its order made reads return the OLDEST version forever: logins
+        // failed, orders duplicated, deletes never stuck).
+        const versioned = list.filter((b) => VERSIONED_KEY.test(b.pathname || ""));
+        versioned.sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+        const legacy = list.find((b) => (b.pathname || "") === DATA_KEY);
+        // Try candidates newest-first; only fall back to the legacy single
+        // "data.json" key (pre-versioning) when no versioned key exists.
+        const candidates = versioned.length ? versioned.slice(0, 5) : (legacy ? [legacy] : []);
+        let loaded = null;
+        for (const cand of candidates) {
+          try {
+            const r = await fetch(cand.url + (cand.url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
+            const data = await r.json();
+            if (data && Array.isArray(data.courses)) { loaded = data; break; }
+          } catch (e) { /* try the next candidate */ }
         }
+        if (loaded) { memoryData = ensureData(loaded); return memoryData; }
+        lastErr = new Error(candidates.length ? "bad data in blob" : "data.json not listed yet");
       } catch (e) { lastErr = e; }
       if (attempt < 2) await new Promise((res) => setTimeout(res, attempt === 0 ? 500 : 1200));
     }
