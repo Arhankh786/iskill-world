@@ -5,7 +5,7 @@ function mineView(o) {
   // hiddenByBuyer is a per-buyer history flag only: hiding an order never
   // cancels it and never removes the course from My Courses — the admin
   // still sees the order and can approve/reject it.
-  return { id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.status === "approved" ? o.driveUrl : "", telegramChannel: o.status === "approved" ? (o.telegramChannel || "") : "", hiddenByBuyer: !!o.hiddenByBuyer };
+  return { id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.status === "approved" ? o.driveUrl : "", telegramChannel: o.status === "approved" ? (o.telegramChannel || "") : "", name: o.name || "", mobile: o.mobile || "", telegram: o.telegram || "", email: o.email || "", paymentInitiated: !!o.paymentInitiated, paymentInitiatedAt: o.paymentInitiatedAt || "", hiddenByBuyer: !!o.hiddenByBuyer };
 }
 export default async function handler(req, res) {
   cors(res);
@@ -34,6 +34,18 @@ export default async function handler(req, res) {
       await saveData(data);
       return sendJson(res, { ok: true });
     }
+    // Buyer tapped "Pay on Telegram": record that payment was started
+    // (with a timestamp) so the admin can see it on the order. This
+    // does NOT change the order status — it stays Pending until the
+    // admin approves or rejects it.
+    if (body.action === "paymentInitiated") {
+      const o = data.orders.find((x) => String(x.id) === String(body.id) && String(x.userId) === String(user.id));
+      if (!o) return sendErr(res, "Order not found", 404);
+      o.paymentInitiated = true;
+      o.paymentInitiatedAt = new Date().toISOString();
+      await saveData(data);
+      return sendJson(res, { ok: true, order: mineView(o) });
+    }
     const course = data.courses.find((c) => c.id === body.courseId);
     if (!course) return sendErr(res, "Course not found", 404);
     // No re-purchase: an approved buyer never buys the same course again.
@@ -61,7 +73,7 @@ export default async function handler(req, res) {
     // timestamp code if the sequential one is already taken.
     let code = "ORD-" + String(1000 + data.orders.length + 1);
     if (data.orders.find((o) => o.code === code)) code = "ORD-" + Date.now().toString(36).toUpperCase();
-    const order = { id: newId("ord"), code, courseId: course.id, courseTitle: course.title, userId: user.id, name, contact: mobileOk || (telegram ? "@" + telegram : user.contact), mobile: mobileOk, telegram, email: accountEmail, amount: Number(course.price) || 0, status: course.free ? "approved" : "pending", driveUrl: course.driveUrl || "", telegramChannel: course.telegramChannel || "", createdAt: new Date().toISOString() };
+    const order = { id: newId("ord"), code, courseId: course.id, courseTitle: course.title, userId: user.id, name, contact: mobileOk || (telegram ? "@" + telegram : user.contact), mobile: mobileOk, telegram, email: accountEmail, amount: Number(course.price) || 0, status: course.free ? "approved" : "pending", driveUrl: course.driveUrl || "", telegramChannel: course.telegramChannel || "", paymentInitiated: false, paymentInitiatedAt: "", createdAt: new Date().toISOString() };
     data.orders.push(order);
     await saveData(data);
     return sendJson(res, { ok: true, order: mineView(order), user: publicUser(user) });

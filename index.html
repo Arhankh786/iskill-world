@@ -306,6 +306,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl .row-actions{display:flex;gap:7px;flex-wrap:wrap}
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
 .on-tag{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--accent);color:#fff;letter-spacing:.02em}
+.pay-tag{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#dff5e8;color:#0e5c33;letter-spacing:.02em}
 .ord-sec{font-size:15px;font-weight:800;margin:20px 0 2px;color:var(--ink)}
 .ord-sec:first-of-type{margin-top:6px}
 .hist-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -497,7 +498,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
         <div class="how-card">
           <div class="how-num">02</div>
           <h3>Pay on Telegram</h3>
-          <p>The payment gateway is coming soon. For now, payment is confirmed with the seller on Telegram, do not forget to share your order number.</p>
+          <p>Message @iSkill_Admin on Telegram with your order number to pay. The seller confirms your payment, then approves your order.</p>
         </div>
         <div class="how-card">
           <div class="how-num">03</div>
@@ -932,6 +933,7 @@ function normOrder(o){
     amount: (o.amount != null ? o.amount : 0), status: label, rawStatus: st,
     drive: o.driveUrl || o.drive || "", telegram: o.telegramChannel || o.telegram || "",
     hiddenByBuyer: !!o.hiddenByBuyer, hiddenByAdmin: !!o.hiddenByAdmin,
+    paymentInitiated: !!o.paymentInitiated, paymentInitiatedAt: o.paymentInitiatedAt || "",
     when: o.createdAt ? new Date(o.createdAt).toLocaleString("en-IN") : (o.when || "")};
 }
 function applyServerData(courses, catNames){
@@ -1391,6 +1393,51 @@ $("cmEnroll").addEventListener("click", function(){
   if(isOwned(detailCourseId)){ closeModal("courseModal"); showView("mine"); return; }
   closeModal("courseModal"); openCheckout(detailCourseId);
 });
+/* ================= Telegram payment (@iSkill_Admin) =================
+   Payment goes through Telegram: the buyer taps "Pay on Telegram" and
+   lands on t.me/iSkill_Admin with a prefilled message carrying the
+   course, price, order code and their details, so the seller can see
+   who is paying for what. Tapping the button only RECORDS that payment
+   was started (paymentInitiated + time) — the order stays Pending
+   until the admin approves or rejects it. Free courses never show a
+   payment step. Support is the same @iSkill_Admin — there is no
+   separate payment ID. */
+var PAYMENT_TG = "iSkill_Admin";
+function payTelegramUrl(o){
+  var cc = RAW.filter(function(x){ return String(x.id) === String(o.courseId); })[0];
+  var amt = (o.amount != null && o.amount !== "") ? Number(o.amount) : (cc ? Number(cc.price) || 0 : 0);
+  var lines = ["Hi, I want to buy " + (o.courseTitle || o.title || "") + " (" + (amt ? inr(amt) : "Free") + ").", "Order: " + (o.code || "")];
+  var nm = String(o.name || (USER && USER.name) || "").trim();
+  var mb = String(o.mobile || (USER && USER.mobile) || "").trim();
+  var tg = String(o.telegram || (USER && USER.telegram) || "").trim().replace(/^@+/, "");
+  var em = String(o.email || o.mail || ((USER && USER.contact && USER.contact.indexOf("@") > 0) ? USER.contact : "") || "").trim();
+  if(nm) lines.push("Name: " + nm);
+  if(mb) lines.push("Mobile: " + mb);
+  if(tg) lines.push("Telegram: @" + tg);
+  if(em) lines.push("Email: " + em);
+  return "https://t.me/" + PAYMENT_TG + "?text=" + encodeURIComponent(lines.join("\n"));
+}
+function payButtonHTML(o){
+  var amt = (o.amount != null && o.amount !== "") ? Number(o.amount) : 0;
+  if(String(o.status || "").toLowerCase() !== "pending" || !(amt > 0)) return "";
+  var h = "<a class=\"btn btn-orange btn-block\" href=\"" + esc(payTelegramUrl(o)) + "\" target=\"_blank\" rel=\"noopener\" data-pay=\"" + esc(o.id) + "\" data-sound>Pay on Telegram @iSkill_Admin</a>";
+  if(o.paymentInitiated) h += "<span class=\"hint\" style=\"color:var(--green);font-weight:700\">Payment initiated" + (o.paymentInitiatedAt ? " \u00b7 " + esc(new Date(o.paymentInitiatedAt).toLocaleString("en-IN")) : "") + " \u2014 the seller will approve once payment is confirmed.</span>";
+  return h;
+}
+async function markPaymentInitiated(orderId){
+  if(MODE === "live"){
+    var r = await api("order", {token: USER_TOKEN, method: "POST", body: JSON.stringify({action: "paymentInitiated", id: orderId})});
+    if(r && r.ok){
+      (myOrdersCache || []).forEach(function(x){ if(String(x.id) === String(orderId)){ x.paymentInitiated = true; x.paymentInitiatedAt = new Date().toISOString(); } });
+      loadMyCourses(); loadMyOrders(state.myOrderFilter || "all");
+    }
+  } else {
+    var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(orderId); })[0];
+    if(o){ o.paymentInitiated = true; o.paymentInitiatedAt = new Date().toISOString(); localSave(); }
+    (myOrdersCache || []).forEach(function(x){ if(String(x.id) === String(orderId)){ x.paymentInitiated = true; x.paymentInitiatedAt = new Date().toISOString(); } });
+    loadMyCourses(); loadMyOrders(state.myOrderFilter || "all");
+  }
+}
 function openCheckout(id){
   var c = state.courses.filter(function(x){ return x.id === id; })[0]; if(!c) return;
   if(isOwned(id)){ toast("You already bought this course — no need to buy again."); return; }
@@ -1448,10 +1495,15 @@ $("coForm").addEventListener("submit", async function(e){
       ? "Done! This course is free — your access is approved instantly. Open the course again to get the material link."
       : "Order placed! The seller will contact you on " + esc(contact) + " to confirm payment. Once approved, your course access opens here.";
     ok.style.display = "block";
+    if(r.order && r.order.status !== "approved" && Number(r.order.amount || 0) > 0){
+      ok.innerHTML += "<div style=\"margin-top:12px\">" + payButtonHTML(r.order) + "<p class=\"hint\" style=\"margin-top:8px\">Tap to message @iSkill_Admin on Telegram \u2014 your course, price, order number and details are already filled in.</p></div>";
+      var _pb = ok.querySelector("[data-pay]");
+      if(_pb) _pb.addEventListener("click", function(){ markPaymentInitiated(r.order.id); });
+    }
     chime(); toast(r.order && r.order.status === "approved" ? "Free course unlocked!" : "Order placed successfully.");
   } else {
     var order = {id: uid(), code: "ORD-" + (1000 + (DATA.orders || []).length + 1), courseId: c.id, courseTitle: c.title, name: name, contact: contact, mobile: mobile, telegram: telegram, email: (USER.contact && USER.contact.indexOf("@") > 0) ? USER.contact : "", userId: USER.id,
-      amount: c.price, status: c.price ? "pending" : "approved", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString()};
+      amount: c.price, status: c.price ? "pending" : "approved", driveUrl: "", telegramChannel: "", paymentInitiated: false, paymentInitiatedAt: "", createdAt: new Date().toISOString()};
     if(mobile) USER.mobile = mobile; if(telegram) USER.telegram = telegram;
     var raw = RAW.filter(function(x){ return String(x.id) === String(c.id); })[0];
     if(raw){ order.driveUrl = raw.driveUrl || ""; order.telegramChannel = raw.telegramChannel || ""; }
@@ -1461,6 +1513,11 @@ $("coForm").addEventListener("submit", async function(e){
       ? "Order placed! The seller will contact you on " + esc(contact) + " to confirm payment. Once approved, your course access opens here."
       : "Done! This course is free — your access is approved instantly. Open the course again to get the material link.";
     ok.style.display = "block";
+    if(order.status !== "approved" && Number(order.amount || 0) > 0){
+      ok.innerHTML += "<div style=\"margin-top:12px\">" + payButtonHTML(order) + "<p class=\"hint\" style=\"margin-top:8px\">Tap to message @iSkill_Admin on Telegram \u2014 your course, price, order number and details are already filled in.</p></div>";
+      var _pb2 = ok.querySelector("[data-pay]");
+      if(_pb2) _pb2.addEventListener("click", function(){ markPaymentInitiated(order.id); });
+    }
     chime(); toast(c.price ? "Order placed successfully." : "Free course unlocked!");
     renderStats();
   }
@@ -1490,7 +1547,7 @@ async function loadMyCourses(){
     list = r.orders || [];
   } else {
     list = (DATA.orders || []).filter(function(o){ return String(o.userId) === String(USER.id); }).map(function(o){
-      return {id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.driveUrl || "", telegramChannel: o.telegramChannel || "", hiddenByBuyer: !!o.hiddenByBuyer};
+      return {id: o.id, code: o.code, courseId: o.courseId, courseTitle: o.courseTitle, status: o.status, createdAt: o.createdAt, amount: o.amount || 0, driveUrl: o.driveUrl || "", telegramChannel: o.telegramChannel || "", name: o.name || "", mobile: o.mobile || "", telegram: o.telegram || "", email: o.email || "", paymentInitiated: !!o.paymentInitiated, paymentInitiatedAt: o.paymentInitiatedAt || "", hiddenByBuyer: !!o.hiddenByBuyer};
     });
   }
   myOrdersCache = list;
@@ -1519,7 +1576,10 @@ async function loadMyCourses(){
       if(drv) h += "<a class=\"btn btn-orange btn-block\" href=\"" + esc(drv) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Open course on Drive</a>";
       if(tg) h += "<a class=\"btn btn-white btn-block\" href=\"" + esc(tg) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Join course on Telegram</a>";
       if(!drv && !tg) h += "<span class=\"hint\">Approved \u2014 course material will be shared on your contact.</span>";
-    } else if(st === "pending") h += "<span class=\"hint\">Waiting for seller approval after payment confirmation.</span>";
+    } else if(st === "pending"){
+      h += "<span class=\"hint\">Waiting for seller approval after payment confirmation.</span>";
+      h += payButtonHTML(o);
+    }
     else if(st === "cancelled") h += "<span class=\"hint\">This order was cancelled. Contact the seller on Telegram if this is a mistake.</span>";
     else h += "<span class=\"hint\">This order was rejected. Contact the seller on Telegram if this is a mistake.</span>";
     /* Same history clear as My Orders: clears the history entry only —
@@ -1548,6 +1608,9 @@ async function loadMyCourses(){
   out.innerHTML = hOut;
   out.querySelectorAll("[data-mine-clear]").forEach(function(b){
     b.addEventListener("click", function(){ armConfirm("mine" + b.getAttribute("data-mine-clear"), b, "Clear from history", function(){ hideMyOrder(b.getAttribute("data-mine-clear")); }); });
+  });
+  out.querySelectorAll("[data-pay]").forEach(function(a){
+    a.addEventListener("click", function(){ markPaymentInitiated(a.getAttribute("data-pay")); });
   });
 }
 function myOrders(){ return loadMyCourses(); }
@@ -1649,6 +1712,7 @@ async function loadMyOrders(filter){
     var tag = st === "pending" ? " <span class=\"on-tag\">On</span>" : "";
     var row = "<div class=\"mine-order\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:flex-start\"><b>" + esc(o.courseTitle || "") + "</b><span style=\"display:flex;gap:6px;align-items:center;flex-shrink:0\"><span class=\"pill " + cls + "\">" + label.toUpperCase() + "</span>" + tag + "</span></div>"
       + "<div class=\"hint\">" + esc(o.code || "") + " \u00b7 " + (amt ? inr(amt) : "Free") + (o.createdAt ? " \u00b7 " + esc(new Date(o.createdAt).toLocaleDateString("en-IN")) : "") + "</div>"
+      + payButtonHTML(o)
       + "<div style=\"margin-top:8px;display:flex;gap:8px\">"
       + (o.hiddenByBuyer
           ? "<button class=\"btn btn-sm\" data-restore=\"" + esc(o.id) + "\" data-sound>Restore</button>"
@@ -1657,6 +1721,9 @@ async function loadMyOrders(filter){
     return row;
   }
   function bindRowButtons(){
+    listEl.querySelectorAll("[data-pay]").forEach(function(a){
+      a.addEventListener("click", function(){ markPaymentInitiated(a.getAttribute("data-pay")); });
+    });
     listEl.querySelectorAll("[data-clear]").forEach(function(b){
       b.addEventListener("click", function(){ armConfirm("o" + b.getAttribute("data-clear"), b, "Clear", function(){ hideMyOrder(b.getAttribute("data-clear")); }); });
     });
@@ -2359,9 +2426,10 @@ function renderOrders(){
     var amt = o.amount || (cc ? Number(cc.price) || 0 : 0);
     var contactLine = esc(o.mobile || o.contact || "") + (o.telegram ? " · @" + esc(o.telegram.replace(/^@+/, "")) : "") + (o.mail ? " · " + esc(o.mail) : "");
     var onTag = o.status === "Pending" ? " <span class=\"on-tag\">On</span>" : "";
+    var payTag = o.paymentInitiated ? " <span class=\"pay-tag\">Payment initiated" + (o.paymentInitiatedAt ? " \u00b7 " + esc(new Date(o.paymentInitiatedAt).toLocaleString("en-IN")) : "") + "</span>" : "";
     tr.innerHTML = "<td><b>" + esc(o.name) + "</b><br><span style=\"color:var(--muted);font-size:.82rem\">" + contactLine + "<br>" + esc(o.when) + "</span></td>"
       + "<td>" + esc(o.title) + "</td><td>" + (amt ? inr(amt) : "FREE") + "</td>"
-      + "<td><span class=\"pill " + pillCls + "\">" + o.status + "</span>" + onTag + "</td>"
+      + "<td><span class=\"pill " + pillCls + "\">" + o.status + "</span>" + onTag + payTag + "</td>"
       + "<td><div class=\"row-actions\">"
       + (o.status !== "Approved" && o.status !== "Cancelled" ? "<button class=\"btn btn-sm btn-orange\" data-act=\"ap\" data-sound>Approve</button>" : "")
       + (o.status !== "Rejected" && o.status !== "Cancelled" ? "<button class=\"btn btn-sm\" data-act=\"rj\" data-sound>Reject</button>" : "")
