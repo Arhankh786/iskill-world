@@ -237,7 +237,7 @@ footer.site .btn{margin-top:12px;border-radius:999px;padding:10px 16px;font-size
 /* ---------- modal ---------- */
 .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);z-index:70;display:none;align-items:flex-end;justify-content:center;padding:0}
 .modal-back.open{display:flex}
-.modal{background:var(--surface);width:100%;max-width:512px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;animation:riseIn .55s cubic-bezier(.22,1,.36,1) both}
+.modal{background:var(--surface);width:100%;max-width:512px;max-height:92vh;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-radius:24px 24px 0 0;animation:riseIn .55s cubic-bezier(.22,1,.36,1) both}
 @media(min-width:640px){.modal-back{align-items:center;padding:20px}.modal{border-radius:24px}}
 .modal .m-cover{height:208px;overflow:hidden;background:var(--surface2)}
 .modal .m-cover img,.modal .m-cover svg.art{width:100%;height:100%;object-fit:cover}
@@ -245,13 +245,14 @@ footer.site .btn{margin-top:12px;border-radius:999px;padding:10px 16px;font-size
 /* while a sheet/modal is open the bottom nav + Telegram button hide so the
    sheet's last button is never covered and can be scrolled fully into view */
 body.modal-open .bottom-nav,body.modal-open .tg-float{display:none}
+body.modal-open{overflow:hidden}
 /* the floating Telegram button fades out while scrolling so it never covers
    a card button, and comes back shortly after scrolling stops */
 body.fab-hidden .tg-float{opacity:0;pointer-events:none;transform:scale(.85)}
 .modal h3{font-size:24px;font-weight:700;margin:6px 0 8px;letter-spacing:-.01em}
 .modal .m-desc{color:var(--dim);line-height:1.65;font-weight:400;font-size:14px}
 .modal-wrap{position:relative}
-.x-btn{position:absolute;top:12px;right:12px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;display:grid;place-items:center;font-size:16px;font-weight:700}
+.x-btn{position:sticky;top:12px;float:right;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:16px;font-weight:700;margin:12px 12px -52px 0;padding:0;text-align:center;line-height:40px}
 .course-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .meta-pill{border:1px solid var(--border);background:var(--surface2);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--ink)}
 .m-price-box{border:1px solid var(--border);background:var(--surface2);border-radius:16px;padding:16px;margin-top:16px}
@@ -1280,7 +1281,10 @@ function syncModalChrome(){
   var anyOpen = !!document.querySelector(".modal-back.open");
   document.body.classList.toggle("modal-open", anyOpen);
 }
-function openModal(id){ $(id).classList.add("open"); syncModalChrome(); swoosh(); }
+/* Every modal always opens at its very top: the sheet is one persistent
+   element, so without this it reopens at the scroll position it was left
+   at and the photo/title sit cut off above the viewport. */
+function openModal(id){ var back = $(id); back.classList.add("open"); var m = back.querySelector(".modal"); if(m) m.scrollTop = 0; syncModalChrome(); swoosh(); }
 function closeModal(id){ $(id).classList.remove("open"); syncModalChrome(); blip(420); }
 document.querySelectorAll("[data-close]").forEach(function(b){
   b.addEventListener("click", function(){ b.closest(".modal-back").classList.remove("open"); syncModalChrome(); });
