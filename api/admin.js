@@ -18,6 +18,8 @@ function cleanCourse(input, existing) {
     coverKind: input.cover ? "image" : ((existing && existing.coverKind) || "gradient"),
     driveUrl: String(input.driveUrl || (existing && existing.driveUrl) || ""),
     telegramChannel: String(input.telegramChannel || (existing && existing.telegramChannel) || ""),
+    demoVideo: String(input.demoVideo || (existing && existing.demoVideo) || "").trim(),
+    demoTelegram: String(input.demoTelegram || (existing && existing.demoTelegram) || "").trim(),
     createdAt: (existing && existing.createdAt) || new Date().toISOString() };
   if (!course.title) throw new Error("Course title is required");
   if (course.cover && course.cover.length > 2000000) throw new Error("Cover image is too large (max ~1.5 MB after upload)");

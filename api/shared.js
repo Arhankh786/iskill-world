@@ -28,7 +28,7 @@ export function seedData() {
   const c = (id, title, category, price, oldPrice, rating, students, duration, lessons, level, instructor, description, includes, free = false) => ({
     id, title, category, price, oldPrice, rating, students, duration, lessons,
     level, instructor, description, includes, free,
-    cover: "", coverKind: "gradient", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString(),
+    cover: "", coverKind: "gradient", driveUrl: "", telegramChannel: "", demoVideo: "", demoTelegram: "", createdAt: new Date().toISOString(),
   });
   return {
     version: 1,

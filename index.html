@@ -659,6 +659,8 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
           <div class="field"><label for="fDesc">Description *</label><textarea id="fDesc" rows="3" placeholder="What will students learn? Who is this course for?"></textarea></div>
           <div class="field"><label for="fTelegram">Telegram channel link for this course (optional)</label><input id="fTelegram" placeholder="https://t.me/+..." /><p class="hint">Owner can give a Telegram channel link instead of, or along with, Drive. Approved buyers get a Join button after payment.</p></div>
           <div class="field"><label for="fDrive">Google Drive link (course material)</label><input id="fDrive" placeholder="https://drive.google.com/…" /><p class="hint">Students get this link after their order is approved. Leave blank if you deliver material another way.</p></div>
+          <div class="field"><label for="fDemoVideo">Demo Video link (optional)</label><input id="fDemoVideo" placeholder="https://youtube.com/watch?v=… or any video link" /><p class="hint">Optional — buyers see a "Watch Demo" button on the course. Leave blank to hide it.</p></div>
+          <div class="field"><label for="fDemoTelegram">Demo Telegram link (optional)</label><input id="fDemoTelegram" placeholder="https://t.me/… or @username" /><p class="hint">Optional — buyers see a "Demo on Telegram" button on the course. Leave blank to hide it.</p></div>
           <div class="field"><label>Cover image</label>
             <div class="img-drop">
               <img id="imgPreview" alt="Course cover preview" style="display:none" />
@@ -776,6 +778,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
       <div class="m-price-box" id="cmPrice"></div>
       <button class="btn btn-orange" id="cmEnroll" data-sound>Buy this course</button>
       <a class="btn btn-white" id="cmAsk" href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound>Ask on Telegram @iSkill_Admin</a>
+      <div id="cmDemo"></div>
       <div id="cmAccess"></div>
       <div id="cmRate"></div>
     </div>
@@ -887,7 +890,7 @@ function seedLocal(){
   function mk(id, title, cat, price, oldP, rating, students, dur, lessons, level, desc, inc, free){
     /* No fake numbers: rating is always null and students always 0 here —
        real values come from real orders / real buyer ratings only. */
-    return {id: id, title: title, category: cat, price: price, oldPrice: oldP, rating: null, students: 0, duration: dur, lessons: lessons, level: level, instructor: "iSkill World", description: desc, includes: inc, free: !!free, cover: "", coverKind: "gradient", driveUrl: "", telegramChannel: "", createdAt: new Date().toISOString()};
+    return {id: id, title: title, category: cat, price: price, oldPrice: oldP, rating: null, students: 0, duration: dur, lessons: lessons, level: level, instructor: "iSkill World", description: desc, includes: inc, free: !!free, cover: "", coverKind: "gradient", driveUrl: "", telegramChannel: "", demoVideo: "", demoTelegram: "", createdAt: new Date().toISOString()};
   }
   return {categories: ["Programming", "Design", "Digital Marketing", "Business", "Data Science", "Language", "Music", "Photography"], courses: [
     mk("python-bootcamp", "Complete Python Bootcamp — From Zero to Hero", "Programming", 499, 1999, null, 0, "32 hours", 185, "Beginner", "Learn Python from scratch — basics, OOP, file handling and real projects, in simple English.", ["185 video lessons", "12 hands-on projects", "Certificate of completion", "Lifetime access"]),
@@ -922,6 +925,7 @@ function normCourse(c){
     rating: null, lessons: c.lessons || 0, duration: c.duration || "", level: c.level || "Beginner", art: artFor(c),
     desc: c.description || "", drive: c.driveUrl || "",
     cover: (c.cover && c.coverKind !== "gradient") ? c.cover : "", telegram: c.telegramChannel || "",
+    demoVideo: c.demoVideo || "", demoTelegram: c.demoTelegram || "",
     ratingAvg: (c.ratingAvg == null ? null : Number(c.ratingAvg)), ratingCount: Number(c.ratingCount) || 0,
     students: Number(c.students) || 0};
 }
@@ -1166,6 +1170,21 @@ window.__artFallback = function(img){
   var c = state.courses.filter(function(x){ return x.id === img.getAttribute("data-art-for"); })[0];
   return c ? artSVG(c) : "";
 };
+/* Course demo links (both optional — set in Admin → Add/Edit course).
+   A demo Telegram value may be a full t.me link or a bare @username. */
+function demoTgUrl(v){
+  var s = String(v || "").trim();
+  if(!s) return "";
+  if(s.indexOf("http") === 0) return s;
+  if(s.charAt(0) === "@") return "https://t.me/" + s.slice(1);
+  return "https://t.me/" + s;
+}
+function demoButtonsHTML(c, big){
+  var h = "";
+  if(c.demoVideo) h += "<a class=\"btn " + (big ? "btn-orange" : "btn-white btn-sm") + "\" href=\"" + esc(c.demoVideo) + "\" target=\"_blank\" rel=\"noopener\" data-sound style=\"" + (big ? "width:100%;justify-content:center;margin-top:10px" : "") + "\">▶ Watch Demo</a>";
+  if(c.demoTelegram) h += "<a class=\"btn " + (big ? "btn-white" : "btn-white btn-sm") + "\" href=\"" + esc(demoTgUrl(c.demoTelegram)) + "\" target=\"_blank\" rel=\"noopener\" data-sound style=\"" + (big ? "width:100%;justify-content:center;margin-top:10px" : "") + "\">Demo on Telegram</a>";
+  return h;
+}
 
 /* ================= storefront render ================= */
 var CAT_ICONS = {
@@ -1252,10 +1271,12 @@ function renderCourses(){
       + "</div><div class=\"course-body\"><span class=\"course-eyebrow\">" + bookSVG() + " " + esc(c.cat) + " \u00b7 " + esc(c.level || "") + "</span><h3>" + esc(c.title) + "</h3>"
       + "<p class=\"course-desc\">" + esc(c.desc) + "</p>"
       + ratingBarHTML(c)
+      + (function(){ var d = demoButtonsHTML(c, false); return d ? "<div class=\"demo-row\" style=\"display:flex;gap:8px;flex-wrap:wrap;margin-top:10px\">" + d + "</div>" : ""; })()
       + "<div class=\"cc-meta\"><span class=\"cc-students\">" + usersSVG() + " " + Number(statsFor(c).students).toLocaleString("en-IN") + " students</span>" + (c.lessons ? "<span class=\"cc-pill\">" + (c.lessons || 0) + " lessons</span>" : "") + (c.duration ? "<span class=\"cc-pill\">" + esc(c.duration) + "</span>" : "") + "</div>"
       + "<div class=\"course-foot\">" + priceHTML(c)
       + "<span class=\"details-link\">" + (owned ? "Open course" : "Details") + " \u25b8</span></div></div>";
     card.addEventListener("click", function(){ openDetail(c.id); });
+    card.querySelectorAll(".demo-row a").forEach(function(a){ a.addEventListener("click", function(e){ e.stopPropagation(); }); });
     attachTilt(card, 5);
     g.appendChild(card);
   });
@@ -1319,6 +1340,8 @@ function openDetail(id){
   var askMsg = "Hi, I have a question about " + cleanTitle(c.title) + (ord && ord.code ? " (Order " + ord.code + ")" : "") + ".";
   var askBtn = $("cmAsk");
   if(askBtn){ askBtn.href = "https://t.me/iSkill_Admin?text=" + encodeURIComponent(askMsg); askBtn.textContent = "Ask on Telegram @iSkill_Admin"; }
+  /* Demo buttons (only when the admin set a demo link for this course). */
+  var dm = $("cmDemo"); if(dm) dm.innerHTML = demoButtonsHTML(c, true);
   if(ord){
     var drv = (ord.drive || ord.driveUrl) || "";
     var tg = (ord.telegram || ord.telegramChannel) || "";
@@ -2193,7 +2216,8 @@ $("addForm").addEventListener("submit", async function(e){
     duration: oldRaw ? oldRaw.duration : "10 hours", lessons: lessons, level: $("fLevel").value,
     description: desc,
     includes: oldRaw ? oldRaw.includes : ["Complete video course — lifetime access", "Delivered on Google Drive", "Downloadable resources", "Certificate of completion", "Support on Telegram", "Free updates"],
-    driveUrl: drive, telegramChannel: $("fTelegram").value.trim(), cover: cover
+    driveUrl: drive, telegramChannel: $("fTelegram").value.trim(), cover: cover,
+    demoVideo: $("fDemoVideo").value.trim(), demoTelegram: $("fDemoTelegram").value.trim()
   };
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify(state.editingId ? {action: "updateCourse", id: state.editingId, course: data} : {action: "createCourse", course: data})});
@@ -2305,6 +2329,8 @@ function editCourse(id){
   $("fLevel").value = c.level || "Beginner"; $("fLessons").value = c.lessons || "";
   $("fDesc").value = c.desc; $("fDrive").value = c.drive || "";
   var ft = $("fTelegram"); if(ft) ft.value = c.telegram || "";
+  var fdv = $("fDemoVideo"); if(fdv) fdv.value = c.demoVideo || "";
+  var fdt = $("fDemoTelegram"); if(fdt) fdt.value = c.demoTelegram || "";
   if(c.cover){ var p = $("imgPreview"); p.src = c.cover; p.style.display = "block"; if(c.cover.indexOf("http") === 0) $("fImgUrl").value = c.cover; }
   $("addTitle").textContent = "Edit course"; $("addSubmit").textContent = "Save Changes";
   showTab("add"); window.scrollTo(0, 0);
