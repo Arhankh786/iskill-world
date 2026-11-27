@@ -637,7 +637,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
 
       <div class="panel" data-panel="add">
         <h3 id="addTitle">Add a new course</h3>
-        <p class="sub">Add a course manually. Upload a cover image or paste an image link — thumbnails are gently cleaned up on upload (high quality, no harsh sharpening) — and add a Drive link and/or a Telegram channel link for this course.</p>
+        <p class="sub">Add a course manually. Upload a cover image or paste an image link — the thumbnail is saved exactly as you upload it, in its original quality — and add a Drive link and/or a Telegram channel link for this course.</p>
         <div class="form-err" id="addErr"></div>
         <div class="form-ok" id="addOk"></div>
         <form id="addForm">
@@ -668,7 +668,6 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
               <input id="fImgFile" type="file" accept="image/*" style="display:none" />
               <div class="or">OR</div>
               <input id="fImgUrl" placeholder="Paste image link (https://…)" style="width:100%;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--ink);padding:9px 12px;font-weight:500" />
-              <p class="hint" id="imgEnhanceNote" style="margin-top:8px"></p>
             </div>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -745,12 +744,6 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
             <button class="btn btn-danger" id="clearAllCoursesBtn" type="button" data-sound>Clear all courses</button>
           </div>
           <p class="hint" style="margin:10px 0 0">Clear all courses removes every course from the catalog so you can start fresh. Orders, buyers, your PIN and settings stay safe — and you can bring the 8 sample courses back with Restore any time.</p>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;margin-bottom:16px">
-          <h3 style="font-size:18px">Enhance all thumbnails</h3>
-          <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">Runs the same gentle clean-up (slight contrast and colour lift, max 1200px, high-quality JPEG — no harsh sharpening, so photos stay clean) over every course that already has a thumbnail. Courses without a thumbnail are skipped. Courses, orders, buyers, your admin PIN and settings are not touched.</p>
-          <div class="form-ok" id="enhOk"></div>
-          <button class="btn btn-orange" id="enhanceAllBtn" type="button" data-sound>Enhance all thumbnails</button>
         </div>
         <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px">
           <h3 style="font-size:18px">Change PIN</h3>
@@ -2096,84 +2089,28 @@ $("fCat").addEventListener("change", function(){
   $("newCatWrap").style.display = this.value === "__new" ? "block" : "none";
 });
 
-/* ---- thumbnail auto-enhancer ----
-   Every thumbnail the admin sets is gently cleaned up in the browser
-   before it is saved: resized to max 1200px wide, a very mild
-   contrast/saturation lift, exported as JPEG quality 0.92 — stepped
-   down only if the result would exceed the server's ~1.5 MB cover limit.
-   NO sharpening convolution: the old 3x3 sharpen amplified JPEG block
-   artefacts into heavy visible noise/grain on photos (it ruined the
-   WebVeda course photo). Aspect ratio is always kept. */
-function enhanceImage(img, done){
-  function render(maxW, q, next){
-    var s = Math.min(1, maxW / img.width);
-    var w = Math.max(1, Math.round(img.width * s)), h = Math.max(1, Math.round(img.height * s));
-    var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
-    var ctx = cv.getContext("2d");
-    /* gentle lift only — never sharpen: sharpening turns JPEG artefacts into noise */
-    try{ ctx.filter = "contrast(1.05) saturate(1.08) brightness(1.01)"; }catch(e){}
-    ctx.drawImage(img, 0, 0, w, h);
-    try{ ctx.filter = "none"; }catch(e){}
-    var url = "";
-    try{ url = cv.toDataURL("image/jpeg", q); }catch(e){}
-    if(url && url.length > 1900000 && next) return next();
-    done(url || "");
-  }
-  render(1200, .92, function(){ render(1000, .85, function(){ render(800, .8, null); }); });
-}
-function enhanceFromDataUrl(dataUrl, done){
-  var img = new Image();
-  img.onload = function(){ enhanceImage(img, done); };
-  img.onerror = function(){ done(""); };
-  img.src = dataUrl;
-}
-function enhanceFromUrl(url, done){
-  /* fetch the image (needs the host to allow CORS); on failure the caller keeps the plain URL */
-  fetch(url, {mode: "cors"}).then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.blob(); }).then(function(b){
-    if(!b || b.type.indexOf("image") !== 0) throw new Error("not an image");
-    var obj = URL.createObjectURL(b);
-    var img = new Image();
-    img.onload = function(){ URL.revokeObjectURL(obj); enhanceImage(img, done); };
-    img.onerror = function(){ URL.revokeObjectURL(obj); done(""); };
-    img.src = obj;
-  }).catch(function(){ done(""); });
-}
-function imgNote(msg){ var n = $("imgEnhanceNote"); if(n) n.textContent = msg || ""; }
+/* ---- thumbnails: saved exactly as uploaded ----
+   There is NO auto-enhancer any more (removed at the seller's request):
+   the old canvas sharpen/contrast processing turned JPEG artefacts into
+   heavy visible noise on photos. A thumbnail is now stored byte-for-byte
+   as the admin uploads it (file) or as the pasted link, and rendered with
+   object-fit:cover. No processing, no noise, no overlays. */
 $("fImgFile").addEventListener("change", function(){
   var f = this.files[0]; if(!f) return;
   if(f.size > 2.5 * 1024 * 1024){ toast("Image is large — under 2.5 MB works best.", true); }
-  imgNote("Enhancing thumbnail…");
   var r = new FileReader();
   r.onload = function(){
-    enhanceFromDataUrl(r.result, function(enhanced){
-      var dataUrl = enhanced || r.result;
-      state.uploadedImg = dataUrl;
-      var p = $("imgPreview"); p.src = dataUrl; p.style.display = "block";
-      $("fImgUrl").value = "";
-      imgNote(enhanced ? "Thumbnail auto-enhanced ✨ — resized to 1200px, gently cleaned up, saved as high-quality JPEG." : "Thumbnail saved as-is (could not enhance this file).");
-    });
+    state.uploadedImg = r.result;
+    var p = $("imgPreview"); p.src = r.result; p.style.display = "block";
+    $("fImgUrl").value = "";
   };
   r.readAsDataURL(f);
 });
-var _urlEnhT = null;
 $("fImgUrl").addEventListener("input", function(){
   var u = this.value.trim();
-  if(!u){ state.uploadedImg = ""; imgNote(""); return; }
+  if(!u){ state.uploadedImg = ""; return; }
   var p = $("imgPreview"); p.src = u; p.style.display = "block";
   state.uploadedImg = "";
-  imgNote("Enhancing thumbnail…");
-  clearTimeout(_urlEnhT);
-  _urlEnhT = setTimeout(function(){
-    enhanceFromUrl(u, function(enhanced){
-      if(enhanced){
-        state.uploadedImg = enhanced;
-        var p2 = $("imgPreview"); p2.src = enhanced; p2.style.display = "block";
-        imgNote("Thumbnail auto-enhanced ✨ — resized to 1200px, gently cleaned up, saved as high-quality JPEG.");
-      } else {
-        imgNote("Could not enhance this link (the site blocked downloading it) — saved as-is.");
-      }
-    });
-  }, 600);
 });
 function currentCover(){
   if(state.uploadedImg) return state.uploadedImg;
@@ -2182,7 +2119,7 @@ function currentCover(){
 }
 function resetAddForm(){
   $("addForm").reset(); $("fEditId").value = ""; state.editingId = null; state.uploadedImg = "";
-  $("imgPreview").style.display = "none"; $("newCatWrap").style.display = "none"; imgNote("");
+  $("imgPreview").style.display = "none"; $("newCatWrap").style.display = "none";
   $("addTitle").textContent = "Add a new course"; $("addSubmit").textContent = "Publish Course";
   $("addErr").style.display = "none"; $("addOk").style.display = "none";
 }
@@ -2302,9 +2239,8 @@ function renderMine(){
     var statLine = "<br><span style=\"color:var(--muted);font-size:.82rem\">" + cst.students + " students \u00b7 " + (cst.ratingCount ? ("\u2605 " + (Math.round(cst.ratingAvg * 10) / 10) + " (" + cst.ratingCount + ")") : "No ratings yet") + "</span>";
     tr.innerHTML = "<td><b>" + esc(c.title) + "</b>" + statLine + (isHero ? " <span class=\"hero-badge\" style=\"background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;vertical-align:middle\">★ HERO</span>" : "") + "</td><td>" + esc(c.cat) + "</td><td>" + (c.price ? inr(c.price) : "<b style=\"color:var(--green)\">FREE</b>") + "</td>"
       + "<td>" + (c.drive ? "<a href=\"" + esc(c.drive) + "\" target=\"_blank\" rel=\"noopener\" data-sound>Open ↗</a>" : "<span style=\"color:var(--red);font-weight:800\">Missing</span>") + "</td>"
-      + "<td><div class=\"row-actions\"><button class=\"btn btn-sm\" data-act=\"hero\" data-sound" + (isHero ? " disabled style=\"opacity:.55;cursor:default\"" : "") + ">" + (isHero ? "Hero me hai" : "Make Hero") + "</button><button class=\"btn btn-sm\" data-act=\"enh\" data-sound" + (c.cover ? "" : " disabled style=\"opacity:.55;cursor:default\"") + ">✨ Enhance</button><button class=\"btn btn-sm\" data-act=\"edit\" data-sound>Edit</button><button class=\"btn btn-sm btn-danger\" data-act=\"del\" data-sound>Remove</button></div></td>";
+      + "<td><div class=\"row-actions\"><button class=\"btn btn-sm\" data-act=\"hero\" data-sound" + (isHero ? " disabled style=\"opacity:.55;cursor:default\"" : "") + ">" + (isHero ? "Hero me hai" : "Make Hero") + "</button><button class=\"btn btn-sm\" data-act=\"edit\" data-sound>Edit</button><button class=\"btn btn-sm btn-danger\" data-act=\"del\" data-sound>Remove</button></div></td>";
     tr.querySelector("[data-act=\"edit\"]").addEventListener("click", function(){ editCourse(c.id); });
-    if(c.cover) tr.querySelector("[data-act=\"enh\"]").addEventListener("click", function(){ enhanceCourseCover(c.id); });
     tr.querySelector("[data-act=\"del\"]").addEventListener("click", function(){ removeCourse(c.id); });
     if(!isHero) tr.querySelector("[data-act=\"hero\"]").addEventListener("click", function(){ makeHero(c.id); });
     tb.appendChild(tr);
@@ -2645,53 +2581,6 @@ var _cc = $("clearAllCoursesBtn"); if(_cc) _cc.addEventListener("click", async f
     }
   } finally { _cc.disabled = false; _cc.textContent = "Clear all courses"; }
 });
-
-/* enhance thumbnails — the same auto-enhancer, over existing courses.
-   Returns "enhanced" | "skipped" (no thumbnail / already identical) | "failed".
-   Never deletes anything: it only replaces a course's cover with its enhanced version. */
-async function enhanceOneCourse(rawCourse){
-  var cover = rawCourse.cover || "";
-  if(!cover) return "skipped";
-  var enhanced = await new Promise(function(res){
-    if(cover.indexOf("data:") === 0) enhanceFromDataUrl(cover, function(u){ res(u); });
-    else enhanceFromUrl(cover, function(u){ res(u); });
-  });
-  if(!enhanced) return "failed";
-  if(enhanced === cover) return "skipped";
-  var updated = Object.assign({}, rawCourse, {cover: enhanced, coverKind: "image"});
-  if(MODE === "live"){
-    var r = await api("admin", {method: "POST", body: JSON.stringify({action: "updateCourse", id: rawCourse.id, course: updated})});
-    if(!r || !r.ok) return "failed";
-  } else {
-    var i = DATA.courses.findIndex(function(x){ return String(x.id) === String(rawCourse.id); });
-    if(i > -1){ DATA.courses[i] = updated; localSave(); }
-  }
-  return "enhanced";
-}
-var _eh = $("enhanceAllBtn"); if(_eh) _eh.addEventListener("click", async function(){
-  if(!confirm("Enhance every course thumbnail? This gently cleans up and re-saves each cover (no harsh sharpening). Courses, orders, buyers and your PIN are not touched.")) return;
-  _eh.disabled = true; _eh.textContent = "Enhancing…";
-  var done = 0, skip = 0, fail = 0;
-  try{
-    var list = (RAW || []).slice();
-    for(var i = 0; i < list.length; i++){
-      var st = await enhanceOneCourse(list[i]);
-      if(st === "enhanced") done++; else if(st === "skipped") skip++; else fail++;
-    }
-    await loadCatalog(); await refreshAdminData();
-    var msg = done + " enhanced · " + skip + " skipped (no thumbnail) · " + fail + " failed.";
-    var ok = $("enhOk"); if(ok){ ok.textContent = msg; ok.style.display = "block"; }
-    toast(msg);
-  } finally { _eh.disabled = false; _eh.textContent = "Enhance all thumbnails"; }
-});
-async function enhanceCourseCover(id){
-  var raw = (RAW || []).filter(function(x){ return String(x.id) === String(id); })[0];
-  if(!raw || !raw.cover){ toast("This course has no thumbnail to enhance.", true); return; }
-  toast("Enhancing thumbnail…");
-  var st = await enhanceOneCourse(raw);
-  await loadCatalog(); await refreshAdminData();
-  toast(st === "enhanced" ? "Thumbnail enhanced ✨" : (st === "skipped" ? "Thumbnail already at its best." : "Enhance failed — the image could not be downloaded."), st !== "enhanced");
-}
 
 /* ================= init ================= */
 renderCats(); renderChips(); renderCourses();
