@@ -636,7 +636,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
 
       <div class="panel" data-panel="add">
         <h3 id="addTitle">Add a new course</h3>
-        <p class="sub">Add a course manually. Upload a cover image or paste an image link — thumbnails are auto-enhanced on upload (sharpened, high quality) — and add a Drive link and/or a Telegram channel link for this course.</p>
+        <p class="sub">Add a course manually. Upload a cover image or paste an image link — thumbnails are gently cleaned up on upload (high quality, no harsh sharpening) — and add a Drive link and/or a Telegram channel link for this course.</p>
         <div class="form-err" id="addErr"></div>
         <div class="form-ok" id="addOk"></div>
         <form id="addForm">
@@ -745,7 +745,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
         </div>
         <div style="border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;margin-bottom:16px">
           <h3 style="font-size:18px">Enhance all thumbnails</h3>
-          <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">Runs the same auto-enhance (sharpen, better contrast and colour, max 1200px, high-quality JPEG) over every course that already has a thumbnail. Courses without a thumbnail are skipped. Courses, orders, buyers, your admin PIN and settings are not touched.</p>
+          <p style="font-size:14px;color:var(--dim);margin:4px 0 16px">Runs the same gentle clean-up (slight contrast and colour lift, max 1200px, high-quality JPEG — no harsh sharpening, so photos stay clean) over every course that already has a thumbnail. Courses without a thumbnail are skipped. Courses, orders, buyers, your admin PIN and settings are not touched.</p>
           <div class="form-ok" id="enhOk"></div>
           <button class="btn btn-orange" id="enhanceAllBtn" type="button" data-sound>Enhance all thumbnails</button>
         </div>
@@ -774,7 +774,7 @@ body[data-theme="dark"] .pill.canc{background:#3a1512}
       <p class="m-desc" id="cmDesc"></p>
       <div class="m-price-box" id="cmPrice"></div>
       <button class="btn btn-orange" id="cmEnroll" data-sound>Buy this course</button>
-      <a class="btn btn-white" id="cmAsk" data-telegram href="https://t.me/+jUiC3D_slQI3ZjY1" target="_blank" rel="noopener" data-sound>Ask on Telegram</a>
+      <a class="btn btn-white" id="cmAsk" href="https://t.me/iSkill_Admin" target="_blank" rel="noopener" data-sound>Ask on Telegram @iSkill_Admin</a>
       <div id="cmAccess"></div>
       <div id="cmRate"></div>
     </div>
@@ -1310,6 +1310,11 @@ function openDetail(id){
   $("cmDesc").textContent = c.desc;
   $("cmPrice").innerHTML = "<div class=\"m-price\">" + (c.price ? inr(c.price) : "Free") + (c.oldPrice && c.oldPrice > c.price ? " <s>" + inr(c.oldPrice) + "</s>" : "") + "</div><p class=\"m-trust\">Lifetime access \u00b7 Certificate included \u00b7 Pay once, learn forever</p>";
   var ord = PURCHASED[id] || ((MODE === "local") ? approvedOrder(id) : null), acc = $("cmAccess");
+  /* Ask on Telegram goes to support @iSkill_Admin (NOT the community
+     channel): prefilled with the course name and the buyer's order code. */
+  var askMsg = "Hi, I have a question about " + cleanTitle(c.title) + (ord && ord.code ? " (Order " + ord.code + ")" : "") + ".";
+  var askBtn = $("cmAsk");
+  if(askBtn){ askBtn.href = "https://t.me/iSkill_Admin?text=" + encodeURIComponent(askMsg); askBtn.textContent = "Ask on Telegram @iSkill_Admin"; }
   if(ord){
     var drv = (ord.drive || ord.driveUrl) || "";
     var tg = (ord.telegram || ord.telegramChannel) || "";
@@ -2065,43 +2070,29 @@ $("fCat").addEventListener("change", function(){
 });
 
 /* ---- thumbnail auto-enhancer ----
-   Every thumbnail the admin sets is enhanced in the browser before it is
-   saved: resized to max 1200px wide, contrast/saturation/brightness lifted
-   and sharpened (3x3 convolution), exported as JPEG quality 0.9 — stepped
+   Every thumbnail the admin sets is gently cleaned up in the browser
+   before it is saved: resized to max 1200px wide, a very mild
+   contrast/saturation lift, exported as JPEG quality 0.92 — stepped
    down only if the result would exceed the server's ~1.5 MB cover limit.
-   Aspect ratio is always kept. */
+   NO sharpening convolution: the old 3x3 sharpen amplified JPEG block
+   artefacts into heavy visible noise/grain on photos (it ruined the
+   WebVeda course photo). Aspect ratio is always kept. */
 function enhanceImage(img, done){
   function render(maxW, q, next){
     var s = Math.min(1, maxW / img.width);
     var w = Math.max(1, Math.round(img.width * s)), h = Math.max(1, Math.round(img.height * s));
     var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
     var ctx = cv.getContext("2d");
-    try{ ctx.filter = "contrast(1.12) saturate(1.18) brightness(1.03)"; }catch(e){}
+    /* gentle lift only — never sharpen: sharpening turns JPEG artefacts into noise */
+    try{ ctx.filter = "contrast(1.05) saturate(1.08) brightness(1.01)"; }catch(e){}
     ctx.drawImage(img, 0, 0, w, h);
     try{ ctx.filter = "none"; }catch(e){}
-    /* sharpen: 3x3 convolution, edges clamped */
-    try{
-      var id = ctx.getImageData(0, 0, w, h), src = id.data, out = ctx.createImageData(w, h), dst = out.data;
-      var K = [0,-1,0,-1,5,-1,0,-1,0];
-      for(var y = 0; y < h; y++) for(var x = 0; x < w; x++){
-        for(var ch = 0; ch < 3; ch++){
-          var acc = 0;
-          for(var ky = -1; ky <= 1; ky++) for(var kx = -1; kx <= 1; kx++){
-            var px = Math.min(w - 1, Math.max(0, x + kx)), py = Math.min(h - 1, Math.max(0, y + ky));
-            acc += src[(py * w + px) * 4 + ch] * K[(ky + 1) * 3 + (kx + 1)];
-          }
-          dst[(y * w + x) * 4 + ch] = Math.min(255, Math.max(0, acc));
-        }
-        dst[(y * w + x) * 4 + 3] = src[(y * w + x) * 4 + 3];
-      }
-      ctx.putImageData(out, 0, 0);
-    }catch(e){}
     var url = "";
     try{ url = cv.toDataURL("image/jpeg", q); }catch(e){}
     if(url && url.length > 1900000 && next) return next();
     done(url || "");
   }
-  render(1200, .9, function(){ render(1000, .8, function(){ render(800, .75, null); }); });
+  render(1200, .92, function(){ render(1000, .85, function(){ render(800, .8, null); }); });
 }
 function enhanceFromDataUrl(dataUrl, done){
   var img = new Image();
@@ -2132,7 +2123,7 @@ $("fImgFile").addEventListener("change", function(){
       state.uploadedImg = dataUrl;
       var p = $("imgPreview"); p.src = dataUrl; p.style.display = "block";
       $("fImgUrl").value = "";
-      imgNote(enhanced ? "Thumbnail auto-enhanced ✨ — resized to 1200px, sharpened, saved as high-quality JPEG." : "Thumbnail saved as-is (could not enhance this file).");
+      imgNote(enhanced ? "Thumbnail auto-enhanced ✨ — resized to 1200px, gently cleaned up, saved as high-quality JPEG." : "Thumbnail saved as-is (could not enhance this file).");
     });
   };
   r.readAsDataURL(f);
@@ -2150,7 +2141,7 @@ $("fImgUrl").addEventListener("input", function(){
       if(enhanced){
         state.uploadedImg = enhanced;
         var p2 = $("imgPreview"); p2.src = enhanced; p2.style.display = "block";
-        imgNote("Thumbnail auto-enhanced ✨ — resized to 1200px, sharpened, saved as high-quality JPEG.");
+        imgNote("Thumbnail auto-enhanced ✨ — resized to 1200px, gently cleaned up, saved as high-quality JPEG.");
       } else {
         imgNote("Could not enhance this link (the site blocked downloading it) — saved as-is.");
       }
@@ -2648,7 +2639,7 @@ async function enhanceOneCourse(rawCourse){
   return "enhanced";
 }
 var _eh = $("enhanceAllBtn"); if(_eh) _eh.addEventListener("click", async function(){
-  if(!confirm("Enhance every course thumbnail? This sharpens and re-saves each cover. Courses, orders, buyers and your PIN are not touched.")) return;
+  if(!confirm("Enhance every course thumbnail? This gently cleans up and re-saves each cover (no harsh sharpening). Courses, orders, buyers and your PIN are not touched.")) return;
   _eh.disabled = true; _eh.textContent = "Enhancing…";
   var done = 0, skip = 0, fail = 0;
   try{
