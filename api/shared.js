@@ -108,11 +108,16 @@ export async function loadData(opts) {
     // 3. A _seq marker on the data: if this warm instance last saved a
     //    NEWER seq than the key we just fetched, the fetch is stale and
     //    the in-memory copy wins.
+    // opts.light: ONE fast round, no settle gaps and no re-attempts.
+    // Used by PIN status / verifyPin: the old settle path took 8.6s and
+    // the frontend aborted at 8s, so a correct PIN showed as "Wrong PIN".
+    const light = !!opts.light;
+    const maxAttempts = light ? 1 : 3;
     let lastErr = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const blob = await blobApi(); if (!blob) throw new Error("no blob package");
-        const settleRounds = opts.settle ? 3 : 1;
+        const settleRounds = light ? 1 : (opts.settle ? 3 : 1);
         let candidates = [];
         let prevTop = "";
         for (let round = 0; round < settleRounds; round++) {
@@ -145,15 +150,17 @@ export async function loadData(opts) {
           // The newest key is the truth: retry ITS fetch a few times before
           // falling back to an older key, so one transient fetch failure
           // never serves divergent older data (the "admin shows 7 courses
-          // while the catalog shows 8" skew).
-          const tries = ci === 0 ? 3 : 1;
+          // while the catalog shows 8" skew). Light reads get one try —
+          // speed matters more there, and the caller falls back to a
+          // full read when the light read finds nothing.
+          const tries = ci === 0 ? (light ? 1 : 3) : 1;
           for (let ft = 0; ft < tries && !loaded; ft++) {
             try {
               const r = await fetch(cand.url + (cand.url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
               const data = await r.json();
               if (data && Array.isArray(data.courses)) { loaded = data; break; }
             } catch (e) { /* retry the newest key, then the next candidate */ }
-            if (!loaded && ft < tries - 1) await new Promise((res) => setTimeout(res, 300));
+            if (!loaded && ft < tries - 1 && !light) await new Promise((res) => setTimeout(res, 300));
           }
           if (loaded) break;
         }
@@ -165,7 +172,7 @@ export async function loadData(opts) {
         }
         lastErr = new Error(candidates.length ? "bad data in blob" : "data.json not listed yet");
       } catch (e) { lastErr = e; }
-      if (attempt < 2) await new Promise((res) => setTimeout(res, attempt === 0 ? 500 : 1200));
+      if (!light && attempt < 2) await new Promise((res) => setTimeout(res, attempt === 0 ? 500 : 1200));
     }
     // Blob read failed (transient): serve in-memory only if we have it.
     if (memoryData && Array.isArray(memoryData.courses)) return ensureData(memoryData);
@@ -203,6 +210,16 @@ export async function reloadFresh() {
 export async function reloadFreshNoSeed() {
   memoryData = null;
   return loadData({ forceFresh: true, settle: true, noSeedSave: true });
+}
+
+// Fast auth read: one Blob list round, no settle gaps, no re-attempts,
+// never seeds. Used by PIN status / verifyPin so a slow Blob list can
+// never turn a correct PIN into "Wrong PIN". It never proves "no PIN
+// exists" — only "not found quickly" — so callers fall back to the full
+// settle read when it comes back pin-less.
+export async function loadAuthLight() {
+  memoryData = null;
+  return loadData({ forceFresh: true, light: true, noSeedSave: true });
 }
 
 // Auth for admin-gated handlers. The token is a stateless HMAC keyed by
@@ -246,7 +263,12 @@ export async function saveData(data) {
     }
     catch (e) { return false; /* in-memory copy still works for this instance, but the caller must know it did NOT persist */ }
   }
-  return true;
+  // No Blob token: the write lives only in this warm instance's memory
+  // and is lost on the next cold start / other instance. Most callers
+  // ignore the return value (the storefront keeps working in-memory, as
+  // before) — but setPin checks it, so a PIN can never report ok:true
+  // when it was never persisted.
+  return false;
 }
 
 export function parseDriveId(link) {

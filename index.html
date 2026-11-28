@@ -874,7 +874,12 @@ try { USER_TOKEN = localStorage.getItem("iskill_user_token") || ""; var _u = loc
 
 async function sha256(s){ var b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(function(x){ return x.toString(16).padStart(2, "0"); }).join(""); }
 async function api(fn, opts, timeoutMs){
-  opts = opts || {}; timeoutMs = timeoutMs || 8000;
+  opts = opts || {};
+  /* Admin calls can legitimately take longer (Blob settle reads), and the
+     old 8s abort turned a slow-but-correct PIN check into "Wrong PIN".
+     Give admin calls 25s; everything else keeps 8s. */
+  var _isAdmin = (fn === "admin" || fn === "seed" || fn.indexOf("admin") === 0 || fn.indexOf("seed") === 0);
+  timeoutMs = timeoutMs || (_isAdmin ? 25000 : 8000);
   var c = new AbortController(); var t = setTimeout(function(){ c.abort(); }, timeoutMs);
   try{
     var headers = {"Content-Type": "application/json"};
@@ -2053,7 +2058,7 @@ async function tryPin(){
     }
     if(MODE === "live"){
       var r = await api("admin", {method: "POST", body: JSON.stringify({action: "setPin", pin: v})});
-      if(!r || !r.ok){ err.textContent = (r && r.error) || "Could not save PIN."; err.style.display = "block"; return; }
+      if(!r || !r.ok){ err.textContent = (r && r.error === "unreachable") ? "Could not reach the server — check your connection and try again." : ((r && r.error) || "Could not save PIN."); err.style.display = "block"; return; }
     } else {
       DATA.admin = DATA.admin || {};
       DATA.admin.pinHash = await sha256("iskill-pin:" + v); localSave();
@@ -2065,7 +2070,16 @@ async function tryPin(){
   }
   if(MODE === "live"){
     var r2 = await api("admin", {method: "POST", body: JSON.stringify({action: "verifyPin", pin: v})});
-    if(!r2 || !r2.ok){ err.textContent = "Wrong PIN. Try again."; err.style.display = "block"; blip(180); return; }
+    if(!r2 || !r2.ok){
+      /* Show the server's REAL error: "No PIN set yet", a Blob error, or
+         a dead connection must never all pretend to be "Wrong PIN". */
+      var _m = (r2 && r2.error) || "";
+      if(_m === "Wrong PIN") err.textContent = "Wrong PIN. Try again.";
+      else if(_m === "unreachable") err.textContent = "Could not reach the server — check your connection and try again.";
+      else if(_m) err.textContent = _m;
+      else err.textContent = "Wrong PIN. Try again.";
+      err.style.display = "block"; blip(180); return;
+    }
     TOKEN = r2.token || "";
     try{ localStorage.setItem("iskill_token", TOKEN); }catch(e){}
   } else {

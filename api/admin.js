@@ -1,5 +1,5 @@
 // /api/admin — PIN/token gated seller actions.
-import { loadData, saveData, seedData, ensureData, makePinRecord, checkPin, makeAdminToken, requireAdmin, reloadFreshNoSeed, parseDriveId, driveThumbnail, driveViewUrl, cors, sendJson, sendErr, readBody, newId } from "./shared.js";
+import { loadData, saveData, seedData, ensureData, makePinRecord, checkPin, makeAdminToken, requireAdmin, reloadFreshNoSeed, loadAuthLight, parseDriveId, driveThumbnail, driveViewUrl, cors, sendJson, sendErr, readBody, newId } from "./shared.js";
 function cleanCourse(input, existing) {
   const price = Number(input.price);
   const course = { ...(existing || {}), id: (existing && existing.id) || newId("crs"),
@@ -28,9 +28,15 @@ export default async function handler(req, res) {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).end();
   try {
-    let data = ensureData(await loadData({ settle: true }));
     if (req.method === "GET") {
-      if (req.query && req.query.action === "status") return sendJson(res, { ok: true, pinSet: !!data.admin.pin });
+      if (req.query && req.query.action === "status") {
+        // Fast path first: one light Blob round. Only if it finds no PIN
+        // do we pay for a full settle read — a transiently empty list
+        // must never report "no PIN" for an existing one.
+        let d = ensureData(await loadAuthLight());
+        if (!d.admin.pin) d = ensureData(await loadData({ settle: true }));
+        return sendJson(res, { ok: true, pinSet: !!d.admin.pin });
+      }
       return sendErr(res, "Use POST for admin actions", 405);
     }
     if (req.method !== "POST") return sendErr(res, "Method not allowed", 405);
@@ -39,6 +45,7 @@ export default async function handler(req, res) {
     if (action === "setPin") {
       const pin = String(body.pin || "");
       if (pin.length < 4 || pin.length > 12) return sendErr(res, "PIN must be 4–12 characters");
+      let data = ensureData(await loadData({ settle: true }));
       const hadPin = !!data.admin.pin;
       if (hadPin) {
         const auth = await requireAdmin(data, req);
@@ -46,7 +53,20 @@ export default async function handler(req, res) {
         data = auth.data;
       }
       data.admin.pin = makePinRecord(pin); data.admin.session = null;
-      await saveData(data);
+      const saved = await saveData(data);
+      if (!saved) return sendErr(res, "Could not save PIN — Blob storage is not connected. Connect a Blob store to this project and redeploy, then try again.", 500);
+      // Confirm the PIN actually persisted: a warm instance's memory is
+      // not proof — the next request may land on another instance and
+      // see pinSet:false. Re-read fresh from Blob and check the exact
+      // record we just wrote; retry once after a short gap for slow
+      // Blob propagation before giving up.
+      let confirmed = false;
+      for (let i = 0; i < 2 && !confirmed; i++) {
+        const check = ensureData(await reloadFreshNoSeed());
+        if (check.admin && check.admin.pin && check.admin.pin.salt === data.admin.pin.salt && check.admin.pin.hash === data.admin.pin.hash) confirmed = true;
+        else if (i === 0) await new Promise((res2) => setTimeout(res2, 1000));
+      }
+      if (!confirmed) return sendErr(res, "Could not save PIN — Blob storage did not confirm the save. Check the Blob store is connected to this project (Production) and redeploy, then try again.", 500);
       // The token is an HMAC keyed by the PIN record, so changing the PIN
       // invalidates the old token. Return a fresh one so the panel stays
       // open and the next admin action does not 401 with "Admin is locked".
@@ -54,18 +74,30 @@ export default async function handler(req, res) {
       return sendJson(res, { ok: true, message: "PIN saved. Verify it to open the panel." });
     }
     if (action === "verifyPin") {
-      // Security check: always verify against the NEWEST pin record. A
-      // stale Blob version could still hold the OLD record, which would
-      // wrongly accept a revoked PIN (and issue a token no other handler
-      // accepts). If the fresh read comes back pin-less (transient Blob
-      // outage), fall back to the loaded copy instead of locking everyone out.
-      const fresh = ensureData(await reloadFreshNoSeed());
-      if (fresh.admin && fresh.admin.pin) data = fresh;
+      // Fast path first: one light Blob round. Only if it finds no PIN
+      // do we pay for the full settle read — the old settle path took
+      // 8.6s and the frontend aborted at 8s, so a correct PIN showed
+      // as "Wrong PIN". Security check: always verify against the
+      // NEWEST pin record. A stale Blob version could still hold the
+      // OLD record, which would wrongly accept a revoked PIN (and issue
+      // a token no other handler accepts). If the fresh read comes back
+      // pin-less (transient Blob outage), fall back to the loaded copy
+      // instead of locking everyone out.
+      let data = ensureData(await loadAuthLight());
+      if (!data.admin.pin) {
+        const fresh = ensureData(await reloadFreshNoSeed());
+        if (fresh.admin && fresh.admin.pin) data = fresh;
+        else {
+          const settled = ensureData(await loadData({ settle: true }));
+          if (settled.admin && settled.admin.pin) data = settled;
+        }
+      }
       if (!data.admin.pin) return sendErr(res, "No PIN set yet — create one first", 400);
       if (!checkPin(body.pin, data.admin.pin)) return sendErr(res, "Wrong PIN", 401);
       const token = makeAdminToken(data.admin.pin);
       return sendJson(res, { ok: true, token });
     }
+    let data = ensureData(await loadData({ settle: true }));
     const auth = await requireAdmin(data, req);
     if (!auth.authed) return sendErr(res, "Admin is locked — verify your PIN", 401);
     data = auth.data;
