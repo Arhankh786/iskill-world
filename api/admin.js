@@ -1,6 +1,5 @@
 // /api/admin — PIN/token gated seller actions.
-import { loadData, saveData, seedData, ensureData, makePinRecord, checkPin, makeAdminToken, checkAdminToken, bearerToken, parseDriveId, driveThumbnail, driveViewUrl, cors, sendJson, sendErr, readBody, newId } from "./shared.js";
-function needAuth(data, req) { return checkAdminToken(bearerToken(req), data.admin.pin); }
+import { loadData, saveData, seedData, ensureData, makePinRecord, checkPin, makeAdminToken, requireAdmin, reloadFreshNoSeed, parseDriveId, driveThumbnail, driveViewUrl, cors, sendJson, sendErr, readBody, newId } from "./shared.js";
 function cleanCourse(input, existing) {
   const price = Number(input.price);
   const course = { ...(existing || {}), id: (existing && existing.id) || newId("crs"),
@@ -29,7 +28,7 @@ export default async function handler(req, res) {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).end();
   try {
-    const data = ensureData(await loadData({ settle: true }));
+    let data = ensureData(await loadData({ settle: true }));
     if (req.method === "GET") {
       if (req.query && req.query.action === "status") return sendJson(res, { ok: true, pinSet: !!data.admin.pin });
       return sendErr(res, "Use POST for admin actions", 405);
@@ -40,18 +39,36 @@ export default async function handler(req, res) {
     if (action === "setPin") {
       const pin = String(body.pin || "");
       if (pin.length < 4 || pin.length > 12) return sendErr(res, "PIN must be 4–12 characters");
-      if (data.admin.pin && !needAuth(data, req)) return sendErr(res, "Enter your current PIN first (verify, then change it)", 401);
+      const hadPin = !!data.admin.pin;
+      if (hadPin) {
+        const auth = await requireAdmin(data, req);
+        if (!auth.authed) return sendErr(res, "Enter your current PIN first (verify, then change it)", 401);
+        data = auth.data;
+      }
       data.admin.pin = makePinRecord(pin); data.admin.session = null;
       await saveData(data);
+      // The token is an HMAC keyed by the PIN record, so changing the PIN
+      // invalidates the old token. Return a fresh one so the panel stays
+      // open and the next admin action does not 401 with "Admin is locked".
+      if (hadPin) return sendJson(res, { ok: true, token: makeAdminToken(data.admin.pin), message: "PIN changed." });
       return sendJson(res, { ok: true, message: "PIN saved. Verify it to open the panel." });
     }
     if (action === "verifyPin") {
+      // Security check: always verify against the NEWEST pin record. A
+      // stale Blob version could still hold the OLD record, which would
+      // wrongly accept a revoked PIN (and issue a token no other handler
+      // accepts). If the fresh read comes back pin-less (transient Blob
+      // outage), fall back to the loaded copy instead of locking everyone out.
+      const fresh = ensureData(await reloadFreshNoSeed());
+      if (fresh.admin && fresh.admin.pin) data = fresh;
       if (!data.admin.pin) return sendErr(res, "No PIN set yet — create one first", 400);
       if (!checkPin(body.pin, data.admin.pin)) return sendErr(res, "Wrong PIN", 401);
       const token = makeAdminToken(data.admin.pin);
       return sendJson(res, { ok: true, token });
     }
-    if (!needAuth(data, req)) return sendErr(res, "Admin is locked — verify your PIN", 401);
+    const auth = await requireAdmin(data, req);
+    if (!auth.authed) return sendErr(res, "Admin is locked — verify your PIN", 401);
+    data = auth.data;
     if (action === "lock") { data.admin.session = null; await saveData(data); return sendJson(res, { ok: true }); }
     if (action === "list") return sendJson(res, { ok: true, categories: data.categories, courses: data.courses, orders: data.orders, ratings: data.ratings || [], users: (data.users || []).map((u) => ({ id: u.id, name: u.name, contact: u.contact, createdAt: u.createdAt })), settings: data.settings || {} });
     if (action === "saveSettings") {

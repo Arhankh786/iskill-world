@@ -884,6 +884,15 @@ async function api(fn, opts, timeoutMs){
     clearTimeout(t);
     var j = await r.json().catch(function(){ return {ok: false, error: "Bad response"}; });
     if(!r.ok && !j.error) j.error = "Request failed (" + r.status + ")";
+    j._status = r.status;
+    /* A 401 from an admin-gated call means the admin session is dead (PIN
+       changed elsewhere, or the token was checked against a stale Blob
+       version) — never leave the panel open as a dead end. Show the PIN
+       gate in place. verifyPin is excluded: its 401 means "Wrong PIN". */
+    if(r.status === 401 && (fn === "admin" || fn === "seed" || fn.indexOf("admin") === 0 || fn.indexOf("seed") === 0)){
+      var _b = String((opts && opts.body) || "");
+      if(_b.indexOf("verifyPin") === -1 && typeof adminSessionExpired === "function"){ j._handled401 = true; adminSessionExpired(); }
+    }
     return j;
   }catch(e){ clearTimeout(t); return {ok: false, error: "unreachable"}; }
 }
@@ -1014,10 +1023,19 @@ async function refreshPinStatus(){
   if(MODE === "live"){ var r = await api("admin?action=status"); PIN_SET = !!(r && r.pinSet); }
   else { PIN_SET = !!(DATA && DATA.admin && DATA.admin.pinHash); }
 }
+/* A 401 from any admin-gated call means the admin session is dead — the
+   panel must not sit open as a dead end. Clear the token and show the PIN
+   gate in place so the owner can re-auth and retry. */
+function adminSessionExpired(){
+  adminAuthed = false; TOKEN = "";
+  try{ localStorage.removeItem("iskill_token"); }catch(e){}
+  showPinGate(); toast("Session expired — enter your PIN again.", true);
+}
 async function refreshAdminData(){
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "list"})});
     if(!r || !r.ok){
+      if(r && r._handled401) return false; /* PIN gate already shown by api() */
       adminAuthed = false; TOKEN = "";
       try{ localStorage.removeItem("iskill_token"); }catch(e){}
       showPinGate(); toast("Session expired — enter your PIN again.", true); return false;
@@ -1052,6 +1070,12 @@ function uid(){ return "c" + Date.now().toString(36) + Math.floor(Math.random() 
 function toast(msg, isErr){
   var t = document.createElement("div"); t.className = "toast" + (isErr ? " err" : ""); t.textContent = msg;
   $("toasts").appendChild(t); setTimeout(function(){ t.remove(); }, 3600);
+}
+/* Admin action failed: if the PIN gate was already shown for a dead
+   session (_handled401), do not add a second error toast on top of it. */
+function adminFailToast(r, prefix){
+  if(r && r._handled401) return;
+  toast(prefix + ((r && r.error) || "try again."), true);
 }
 /* contact normalisation: 98765 43210, +91 98765 43210 and 09876543210 are the same buyer */
 function normContact(v){
@@ -1662,7 +1686,7 @@ function armConfirm(key, btn, label, fn){
 async function hideMyOrder(id){
   if(MODE === "live"){
     var r = await api("order", {token: USER_TOKEN, method: "POST", body: JSON.stringify({action: "hide", id: id})});
-    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Could not clear: "); return; }
   } else {
     var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
     if(o){ o.hiddenByBuyer = true; localSave(); }
@@ -1674,7 +1698,7 @@ async function hideMyOrder(id){
 async function hideAllMyOrders(){
   if(MODE === "live"){
     var r = await api("order", {token: USER_TOKEN, method: "POST", body: JSON.stringify({action: "hideAll"})});
-    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Could not clear: "); return; }
   } else {
     (DATA.orders || []).forEach(function(x){ if(String(x.userId) === String(USER.id)) x.hiddenByBuyer = true; });
     localSave();
@@ -1687,7 +1711,7 @@ async function hideAllMyOrders(){
 async function unhideMyOrder(id){
   if(MODE === "live"){
     var r = await api("order", {token: USER_TOKEN, method: "POST", body: JSON.stringify({action: "unhide", id: id})});
-    if(!r || !r.ok){ toast("Could not restore: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Could not restore: "); return; }
   } else {
     var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
     if(o){ o.hiddenByBuyer = false; localSave(); }
@@ -2168,7 +2192,7 @@ $("addForm").addEventListener("submit", async function(e){
   };
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify(state.editingId ? {action: "updateCourse", id: state.editingId, course: data} : {action: "createCourse", course: data})});
-    if(!r || !r.ok) return fail("Save failed: " + ((r && r.error) || "please try again."));
+    if(!r || !r.ok){ if(r && r._handled401) return; return fail("Save failed: " + ((r && r.error) || "please try again.")); }
     ok.textContent = state.editingId
       ? "Course updated: “" + title + "” is live on the store."
       : "Course published: “" + title + "” is now live on the store.";
@@ -2209,7 +2233,7 @@ $("drvForm").addEventListener("submit", async function(e){
   err.style.display = "none";
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "driveImport", driveUrl: link, title: title, category: $("dCat").value, price: $("dPrice").value === "" ? 0 : Number($("dPrice").value)})});
-    if(!r || !r.ok) return fail("Import failed: " + ((r && r.error) || "please try again."));
+    if(!r || !r.ok){ if(r && r._handled401) return; return fail("Import failed: " + ((r && r.error) || "please try again.")); }
     ok.textContent = "Imported: “" + title + "” is now live on the store.";
   } else {
     var id = driveId(link);
@@ -2260,7 +2284,7 @@ async function makeHero(id){
   var c = state.courses.filter(function(x){ return String(x.id) === String(id); })[0]; if(!c) return;
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "saveSettings", settings: {featuredCourseId: id}})});
-    if(!r || !r.ok){ toast("Hero change failed: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Hero change failed: "); return; }
   } else { DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = id; localSave(); }
   DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = id;
   setHeroCover(); fillFeaturedSelect(); renderMine();
@@ -2293,7 +2317,7 @@ async function removeCourse(id){
   pendingDeleteId = null;
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "deleteCourse", id: id})});
-    if(!r || !r.ok){ toast("Delete failed: " + ((r && r.error) || "please try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Delete failed: "); return; }
   } else {
     DATA.courses = DATA.courses.filter(function(x){ return String(x.id) !== String(id); });
     DATA.orders = (DATA.orders || []).filter(function(o){ return String(o.courseId) !== String(id); });
@@ -2312,7 +2336,7 @@ async function removeCourse(id){
 async function adminHideOrder(id){
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "hideOrder", id: id})});
-    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Could not clear: "); return; }
   } else {
     var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
     if(o){ o.hiddenByAdmin = true; localSave(); }
@@ -2323,7 +2347,7 @@ async function adminHideOrder(id){
 async function adminHideAllOrders(){
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "hideAllOrders"})});
-    if(!r || !r.ok){ toast("Could not clear: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Could not clear: "); return; }
   } else {
     (DATA.orders || []).forEach(function(x){ x.hiddenByAdmin = true; });
     localSave();
@@ -2335,7 +2359,7 @@ async function adminHideAllOrders(){
 async function adminUnhideOrder(id){
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "unhideOrder", id: id})});
-    if(!r || !r.ok){ toast("Could not restore: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Could not restore: "); return; }
   } else {
     var o = (DATA.orders || []).filter(function(x){ return String(x.id) === String(id); })[0];
     if(o){ o.hiddenByAdmin = false; localSave(); }
@@ -2410,7 +2434,7 @@ function renderOrders(){
     if(ap) ap.addEventListener("click", async function(){
       if(MODE === "live"){
         var r = await api("admin", {method: "POST", body: JSON.stringify({action: "approveOrder", id: o.id})});
-        if(!r || !r.ok){ toast("Approve failed: " + ((r && r.error) || "please try again."), true); return; }
+        if(!r || !r.ok){ adminFailToast(r, "Approve failed: "); return; }
       } else {
         var o2 = (DATA.orders || []).filter(function(x){ return String(x.id) === String(o.id); })[0];
         if(o2){
@@ -2427,7 +2451,7 @@ function renderOrders(){
     if(rj) rj.addEventListener("click", async function(){
       if(MODE === "live"){
         var r = await api("admin", {method: "POST", body: JSON.stringify({action: "rejectOrder", id: o.id})});
-        if(!r || !r.ok){ toast("Reject failed: " + ((r && r.error) || "please try again."), true); return; }
+        if(!r || !r.ok){ adminFailToast(r, "Reject failed: "); return; }
       } else {
         var o3 = (DATA.orders || []).filter(function(x){ return String(x.id) === String(o.id); })[0];
         if(o3){ o3.status = "rejected"; localSave(); }
@@ -2440,7 +2464,7 @@ function renderOrders(){
     if(cx) cx.addEventListener("click", async function(){
       if(MODE === "live"){
         var r = await api("admin", {method: "POST", body: JSON.stringify({action: "cancelOrder", id: o.id})});
-        if(!r || !r.ok){ toast("Cancel failed: " + ((r && r.error) || "please try again."), true); return; }
+        if(!r || !r.ok){ adminFailToast(r, "Cancel failed: "); return; }
       } else {
         var o4 = (DATA.orders || []).filter(function(x){ return String(x.id) === String(o.id); })[0];
         if(o4){ o4.status = "cancelled"; localSave(); }
@@ -2461,7 +2485,7 @@ function renderOrders(){
         if(!confirm("Permanently remove this order? If it was approved, the buyer loses access to the course and their rating for it is removed too.")) return;
         if(MODE === "live"){
           var r = await api("admin", {method: "POST", body: JSON.stringify({action: "removeOrder", id: o.id})});
-          if(!r || !r.ok){ toast("Remove failed: " + ((r && r.error) || "try again."), true); return; }
+          if(!r || !r.ok){ adminFailToast(r, "Remove failed: "); return; }
         } else {
           var oi = (DATA.orders || []).findIndex(function(x){ return String(x.id) === String(o.id); });
           if(oi > -1){
@@ -2499,7 +2523,16 @@ $("pinChangeForm").addEventListener("submit", async function(e){
   if(newPin.length < 4 || newPin.length > 12){ toast("New PIN must be 4–12 characters.", true); return; }
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "setPin", pin: newPin})});
-    if(!r || !r.ok){ toast("PIN change failed: " + ((r && r.error) || "verify your current PIN first."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "PIN change failed: "); return; }
+    /* The server returns a fresh token when an existing PIN is changed
+       (the old token is keyed by the old PIN record and can never verify
+       again). Store it at once so the panel stays open and the next admin
+       action does not 401 with "Admin is locked". */
+    if(r.token){
+      TOKEN = r.token;
+      try{ localStorage.setItem("iskill_token", TOKEN); }catch(e2){}
+      toast("PIN changed."); e.target.reset(); return;
+    }
     TOKEN = "";
     try{ localStorage.removeItem("iskill_token"); }catch(e2){}
     adminAuthed = false;
@@ -2526,7 +2559,7 @@ var _ff = $("featForm"); if(_ff) _ff.addEventListener("submit", async function(e
   var fid = $("featuredCourse").value;
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "saveSettings", settings: {featuredCourseId: fid}})});
-    if(!r || !r.ok){ toast("Save failed: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Save failed: "); return; }
   } else { DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = fid; localSave(); }
   DATA.settings = DATA.settings || {}; DATA.settings.featuredCourseId = fid;
   setHeroCover();
@@ -2540,7 +2573,7 @@ var _tg = $("tgForm"); if(_tg) _tg.addEventListener("submit", async function(e){
   TELEGRAM_URL = url; applyTelegramLinks();
   if(MODE === "live"){
     var r = await api("admin", {method: "POST", body: JSON.stringify({action: "saveSettings", settings: {telegramUrl: url}})});
-    if(!r || !r.ok){ toast("Save failed: " + ((r && r.error) || "try again."), true); return; }
+    if(!r || !r.ok){ adminFailToast(r, "Save failed: "); return; }
   } else {
     DATA.settings = DATA.settings || {}; DATA.settings.telegramUrl = url; localSave();
   }
@@ -2555,7 +2588,7 @@ var _rs = $("restoreSeedBtn"); if(_rs) _rs.addEventListener("click", async funct
   try{
     if(MODE === "live"){
       var r = await api("seed", {method: "POST", body: JSON.stringify({force: true})});
-      if(!r || !r.ok){ toast("Restore failed: " + ((r && r.error) || "try again."), true); return; }
+      if(!r || !r.ok){ adminFailToast(r, "Restore failed: "); return; }
       await loadCatalog(); await refreshAdminData();
       var n = (r.courses != null ? r.courses : (state.courses || []).length);
       var ok = $("seedOk"); if(ok){ ok.textContent = n + " sample courses restored."; ok.style.display = "block"; }
@@ -2579,7 +2612,7 @@ var _cc = $("clearAllCoursesBtn"); if(_cc) _cc.addEventListener("click", async f
   try{
     if(MODE === "live"){
       var r = await api("admin", {method: "POST", body: JSON.stringify({action: "clearAllCourses"})});
-      if(!r || !r.ok){ toast("Clear failed: " + ((r && r.error) || "try again."), true); return; }
+      if(!r || !r.ok){ adminFailToast(r, "Clear failed: "); return; }
       await loadCatalog(); await refreshAdminData();
       var ok = $("seedOk"); if(ok){ ok.textContent = "Catalog cleared (" + (r.cleared || 0) + " courses removed). Use Restore sample courses to bring them back."; ok.style.display = "block"; }
       toast("All courses cleared. Restore brings the samples back any time.");

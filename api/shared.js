@@ -140,12 +140,22 @@ export async function loadData(opts) {
           if (round < settleRounds - 1) await new Promise((res) => setTimeout(res, 700));
         }
         let loaded = null;
-        for (const cand of candidates) {
-          try {
-            const r = await fetch(cand.url + (cand.url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
-            const data = await r.json();
-            if (data && Array.isArray(data.courses)) { loaded = data; break; }
-          } catch (e) { /* try the next candidate */ }
+        for (let ci = 0; ci < candidates.length; ci++) {
+          const cand = candidates[ci];
+          // The newest key is the truth: retry ITS fetch a few times before
+          // falling back to an older key, so one transient fetch failure
+          // never serves divergent older data (the "admin shows 7 courses
+          // while the catalog shows 8" skew).
+          const tries = ci === 0 ? 3 : 1;
+          for (let ft = 0; ft < tries && !loaded; ft++) {
+            try {
+              const r = await fetch(cand.url + (cand.url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
+              const data = await r.json();
+              if (data && Array.isArray(data.courses)) { loaded = data; break; }
+            } catch (e) { /* retry the newest key, then the next candidate */ }
+            if (!loaded && ft < tries - 1) await new Promise((res) => setTimeout(res, 300));
+          }
+          if (loaded) break;
         }
         if (loaded) {
           if (memoryData && Array.isArray(memoryData.courses) && (Number(memoryData._seq) || 0) > (Number(loaded._seq) || 0)) {
@@ -166,10 +176,12 @@ export async function loadData(opts) {
       memoryData = seed;
       return seed;
     }
-    // Truly first run (no blob after retries, no memory): seed and save.
+    // Truly first run (no blob after retries, no memory): seed and save —
+    // unless the caller is only probing (auth retry), in which case a
+    // transiently empty list must NEVER wipe Blob with a fresh seed.
     const seed = seedData();
     memoryData = seed;
-    await saveData(seed);
+    if (!opts.noSeedSave) await saveData(seed);
     return seed;
   }
   const seed = seedData();
@@ -183,6 +195,38 @@ export async function loadData(opts) {
 export async function reloadFresh() {
   memoryData = null;
   return loadData({ forceFresh: true, settle: true });
+}
+
+// Same forced-fresh reload, but it NEVER seeds Blob: used only by the
+// admin-auth retry below. A transiently empty Blob list during the retry
+// must not wipe the PIN / courses / orders by saving a fresh seed.
+export async function reloadFreshNoSeed() {
+  memoryData = null;
+  return loadData({ forceFresh: true, settle: true, noSeedSave: true });
+}
+
+// Auth for admin-gated handlers. The token is a stateless HMAC keyed by
+// the PIN record, so it can only fail legitimately in two ways: the PIN
+// changed, or this instance read a stale Blob version whose PIN record is
+// older. Check the loaded data first; on failure, retry ONCE against a
+// forced-fresh Blob read before giving up — a stale versioned key must
+// never lock out a legit admin token. Returns { authed, data } — data is
+// the freshest copy we have, so the handler keeps working on current data.
+export async function requireAdmin(data, req) {
+  const token = bearerToken(req);
+  if (token && checkAdminToken(token, data.admin.pin)) return { authed: true, data };
+  if (!token) return { authed: false, data };
+  const prev = data;
+  const fresh = ensureData(await reloadFreshNoSeed());
+  if (fresh.admin && fresh.admin.pin && checkAdminToken(token, fresh.admin.pin)) return { authed: true, data: fresh };
+  // The fresh read came back without a PIN while we previously had one:
+  // the Blob list was transiently empty — trust the previous copy, never
+  // the empty one (and restore it as this instance's memory copy).
+  if (prev && prev.admin && prev.admin.pin && !(fresh.admin && fresh.admin.pin)) {
+    memoryData = prev;
+    return { authed: checkAdminToken(token, prev.admin.pin), data: ensureData(prev) };
+  }
+  return { authed: false, data: fresh };
 }
 
 export async function saveData(data) {
